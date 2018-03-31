@@ -22,7 +22,7 @@
 int main()
 {
     int valor[5];
-    int lenValor=1;
+    int lenValor=3;
     int scClien[3];
     char str[100];
     int listen_fd, comm_fd;
@@ -74,12 +74,13 @@ int main()
        
         strcat(str,"\n");
        // printf("Este es test: %s",test);
+        
         send(scClien[0], str, strlen(str), 0);
         
-//        for(int i=0;i<lenValor;i++){
-//            
-//        write(scClien[i], str, strlen(str)+1);
-// 
-//        }
+        for(int i=0;i<lenValor;i++){
+         send(scClien[i], str, strlen(str), 0);   
+       // write(scClien[i], str, strlen(str)+1);
+ 
+        }
     }
 }
