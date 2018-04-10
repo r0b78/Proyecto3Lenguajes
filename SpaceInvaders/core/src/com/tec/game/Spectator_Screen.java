@@ -1,5 +1,14 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
 package com.tec.game;
 
+/**
+ *
+ * @author aaronsolera
+ */
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
@@ -14,7 +23,7 @@ import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class Game_Screen implements Screen{
+public class Spectator_Screen implements Screen{
     private SpriteBatch batch;
     private Player player;
     private Sprite logo, limit;
@@ -39,9 +48,7 @@ public class Game_Screen implements Screen{
             + "1111111111111111111111111111111111111111111111111111111111111111111111"
             + "1111111111111111111111111111111111111111111111111111111111111111111111"
             + "1111111111111111111111111111111111111111111111111111111111111111111111"
-            + "1111111111111111111111111111111111111111111111111111111111111111111111";
-    ////matrz , Xposmatriz, Yposmatriz,Velmatriz,Xjug,Vjug,Puntaje,diparojug,murods
-    ///bicho disparo/
+            + "1111111111111111111111111111111111111111111111111111111111111111111111";;
 
     @Override
     public void show(){
@@ -67,7 +74,6 @@ public class Game_Screen implements Screen{
         
         Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-        
         if(!connected){
             batch.begin();
             logo.setBounds((Gdx.graphics.getWidth()/2)-100, (Gdx.graphics.getHeight()/2), 200, 70);
@@ -79,8 +85,8 @@ public class Game_Screen implements Screen{
                 new Thread(client).start();
             }
         }else{
-            keyboardEventHandler();
-            if(!game_over){   
+            matrix = client.recieve();
+            if(matrix != null){   
                 batch.begin();
                 logo.setBounds(10, Gdx.graphics.getHeight()-80, 200, 70);
                 logo.draw(batch);
@@ -90,47 +96,13 @@ public class Game_Screen implements Screen{
                 updateBunkers(batch);
                 font.draw(batch, "SCORE: " + player.getScore(), Gdx.graphics.getWidth()-100, Gdx.graphics.getHeight()-50);
                 batch.end();
-                ////////////////////////////////////
-                try {
-                    client.send(createDataFromInformation());
-                    matrix = client.recieve();
-                } catch (IOException ex) {
-                    Logger.getLogger(Game_Screen.class.getName()).log(Level.SEVERE, null, ex);
-                }
-                ////////////////////////////////////
             }else{
                 batch.begin();
                 logo.setBounds((Gdx.graphics.getWidth()/2)-100, (Gdx.graphics.getHeight()/2), 200, 70);
-                font.draw(batch, "Game over, press R key to restart the game...", (Gdx.graphics.getWidth()/2)-135, (Gdx.graphics.getHeight()/2)-10);
+                font.draw(batch, "Waiting a game to spectate...", (Gdx.graphics.getWidth()/2)-90, (Gdx.graphics.getHeight()/2)-10);
                 logo.draw(batch);
                 batch.end();
             }
-        }
-    }
-
-    public void keyboardEventHandler(){
-        if(Gdx.input.isKeyPressed(Input.Keys.LEFT)){
-            player.moveLeft();
-            extra_data.set(3, extra_data.get(3)-1);
-        }
-        if(Gdx.input.isKeyPressed(Input.Keys.RIGHT)){
-            player.moveRight();
-            extra_data.set(3, extra_data.get(3)+1);
-        }
-        if(Gdx.input.isKeyJustPressed(Input.Keys.SPACE)){
-            player.shoot();
-            extra_data.set(6, 1);
-        }else{
-            extra_data.set(6, 0);
-        }
-        if(Gdx.input.isKeyJustPressed(Input.Keys.R)){
-            game_over = false;
-            resetGame();
-            initializeData();
-            initializeGame(5,10);
-            player.setLife(extra_data.get(7));
-            player.setScore(extra_data.get(5));
-            player.setPosition(extra_data.get(3), 20);
         }
     }
 

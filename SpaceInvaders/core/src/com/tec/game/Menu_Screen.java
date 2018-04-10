@@ -35,9 +35,9 @@ public class Menu_Screen implements Screen{
         batch = new SpriteBatch();
         logo = new Sprite(new Texture("logo.png"));
         font = new BitmapFont();
-        b_player = new Button("play_button.png", "play_button.png",(Gdx.graphics.getWidth()/4)-50, (Gdx.graphics.getHeight()/2)-50, 100, 100);
-        b_spectator = new Button("spectator_button.png", "spectator_button.png", (3*(Gdx.graphics.getWidth()/4))-50, (Gdx.graphics.getHeight()/2)-50, 100, 100);
-        }
+        b_player = new Button("play_button.png", "p_play_button.png",(Gdx.graphics.getWidth()/4)-50, (Gdx.graphics.getHeight()/2)-50, 100, 100);
+        b_spectator = new Button("spectator_button.png", "p_spectator_button.png", (3*(Gdx.graphics.getWidth()/4))-50, (Gdx.graphics.getHeight()/2)-50, 100, 100);
+    }
 
     @Override
     public void render(float f) {
@@ -50,6 +50,7 @@ public class Menu_Screen implements Screen{
         b_player.update(batch);
         b_player.nextScreen(game, new Game_Screen());
         b_spectator.update(batch);
+        b_spectator.nextScreen(game, new Spectator_Screen());
         batch.end();
     }
 

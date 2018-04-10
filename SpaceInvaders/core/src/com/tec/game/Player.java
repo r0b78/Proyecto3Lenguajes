@@ -17,13 +17,12 @@ import java.util.ArrayList;
  */
 public class Player extends Entity{
     private Sprite life;
-    private Integer life_number = 3, screen_height = 700;
-    private ArrayList<Bullet> bullets;
+    private Integer life_number = 3;
     
     public Player(String src, Float x, Float y, Float width, Float height, Float speed){
         super(src, x, y, width, height, speed);
+        setScore(0);
         life = new Sprite();
-        bullets = new ArrayList<Bullet>();
     }
     
     @Override
@@ -32,16 +31,27 @@ public class Player extends Entity{
         drawLife(spriteBatch);
         drawBullet(spriteBatch);
     }
+    
+    @Override
+    public void drawBullet(SpriteBatch spriteBatch){
+        for(Integer b = 0; b < bullets.size(); b++){
+            if(bullets.get(b).getY() >= 600){
+                destroyBullet(bullets.get(b));
+            }else{
+                bullets.get(b).draw(spriteBatch);
+            }
+        }
+    }
         
     @Override
     public void moveLeft(){ 
-        if(getX() >= 390)
+        if(getX() >= 20)
             sprite.translateX(-speed); 
     }
     
     @Override
     public void moveRight(){ 
-        if(getX()+getWidth() <= Gdx.graphics.getWidth()- 50)
+        if(getX()+getWidth() <= Gdx.graphics.getWidth()- 20)
         sprite.translateX(speed); 
     }
     
@@ -53,20 +63,11 @@ public class Player extends Entity{
         }
     }
     
-    public void drawBullet(SpriteBatch spriteBatch){
-        for(Integer b = 0; b < bullets.size(); b++){
-            if(bullets.get(b).getY()>=screen_height-60){
-                destroyBullet(bullets.get(b));
-            }else{
-                bullets.get(b).draw(spriteBatch);
-            }
-        }
+    @Override
+    public void shoot(){
+        bullets.add(new Bullet("bullet.png", getX()+(getWidth()/2), getY()+getHeight()+2, 3f, 3f, 5f));
     }
-    
-    public void destroyBullet(Bullet b){
-        bullets.remove(b);
-    }
-    
+   
     public void lifeUp(){ 
         if(life_number <= 3)
             life_number++; 
@@ -77,11 +78,11 @@ public class Player extends Entity{
             life_number--; 
     }
     
-    public void shoot(){
-        bullets.add(new Bullet("bullet.png", getX()+(getWidth()/2), getY()+getHeight()+2, 3f, 3f, 5f));
+    public Integer getLife(){
+        return life_number;
     }
     
-    public ArrayList<Bullet> getBullets(){
-        return bullets;
+    public void setLife(Integer life){
+        life_number = life;
     }
 }

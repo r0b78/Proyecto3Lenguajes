@@ -9,7 +9,7 @@ public class DesktopLauncher {
             LwjglApplicationConfiguration config = new LwjglApplicationConfiguration();
             config.title = "SpaceInvaders";
             config.height = 700;
-            config.width = 1000;
+            config.width = 600;
             new LwjglApplication(new Game_Main(), config);
 	}
 }

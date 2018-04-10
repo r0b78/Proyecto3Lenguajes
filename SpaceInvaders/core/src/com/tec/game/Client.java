@@ -56,6 +56,11 @@ public class Client implements Runnable{
         }
     }
     
+    public void stop() throws IOException{
+        socket.close();
+        running = false;
+    }
+    
     public String recieve(){
         return recieved_data;
     }
