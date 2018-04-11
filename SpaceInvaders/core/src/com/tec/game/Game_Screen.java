@@ -20,6 +20,7 @@ public class Game_Screen implements Screen{
     private Sprite logo, limit;
     private ArrayList<Entity> aliens, walls;
     private ArrayList<Integer[]> matrix_data;
+    private ArrayList<Integer[]> old_matrix_data;
     private ArrayList<Integer> extra_data;
     private ArrayList<Integer> walls_data;
     private Boolean back = false, down = false,connected = false, game_over = false;
@@ -39,7 +40,8 @@ public class Game_Screen implements Screen{
             + "1111111111111111111111111111111111111111111111111111111111111111111111"
             + "1111111111111111111111111111111111111111111111111111111111111111111111"
             + "1111111111111111111111111111111111111111111111111111111111111111111111"
-            + "1111111111111111111111111111111111111111111111111111111111111111111111";
+            + "1111111111111111111111111111111111111111111111111111111111111111111111",
+            old_matrix = "";
     ////matrz , Xposmatriz, Yposmatriz,Velmatriz,Xjug,Vjug,Puntaje,diparojug,murods
     ///bicho disparo/
 
@@ -92,8 +94,13 @@ public class Game_Screen implements Screen{
                 batch.end();
                 ////////////////////////////////////
                 try {
-                    client.send(createDataFromInformation());
+                    old_matrix = createDataFromInformation();
+                    client.send(old_matrix);
+                    if(client.recieve() != null && matrix.length() >= 500){
+                       updateData();
+                    }
                     matrix = client.recieve();
+                    System.out.println("The new data is: "+ matrix);
                 } catch (IOException ex) {
                     Logger.getLogger(Game_Screen.class.getName()).log(Level.SEVERE, null, ex);
                 }
@@ -145,6 +152,7 @@ public class Game_Screen implements Screen{
 
     public void initializeData(){
         matrix_data = new ArrayList<Integer[]>();
+        old_matrix_data = new ArrayList<Integer[]>();
         extra_data = new ArrayList<Integer>();
         walls_data =  new ArrayList<Integer>();
 
@@ -156,14 +164,37 @@ public class Game_Screen implements Screen{
             temp[0] = Integer.parseInt(String.valueOf(matrix_d[md].charAt(0)));
             temp[1] = Integer.parseInt(String.valueOf(matrix_d[md].charAt(2)));
             matrix_data.add(temp);
+            old_matrix_data.add(temp);
         }
 
         for(Integer e = 1; e < data.length-1; e++) {
             extra_data.add(Integer.parseInt(data[e]));
         }
 
-        for (int s = 0; s < 280; s++) {
+        for (Integer s = 0; s < 280; s++) {
             walls_data.add(Integer.parseInt(String.valueOf(data[data.length-1].charAt(s))));
+        }
+    }
+   
+    public void updateData(){
+        String[] data = matrix.split(",");
+        String[] matrix_d = data[0].split("/");
+        
+        String[] old_data = old_matrix.split(",");
+        String[] old_matrix_d = old_data[0].split("/");
+
+        for(Integer md = 0; md < matrix_d.length; md++) {
+            Integer[] temp = new Integer[2];
+            temp[0] = Integer.parseInt(String.valueOf(matrix_d[md].charAt(0)));
+            temp[1] = Integer.parseInt(String.valueOf(matrix_d[md].charAt(2)));
+            matrix_data.set(md,temp);
+        }
+        
+        for(Integer md = 0; md < old_matrix_d.length; md++) {
+            Integer[] temp = new Integer[2];
+            temp[0] = Integer.parseInt(String.valueOf(old_matrix_d[md].charAt(0)));
+            temp[1] = Integer.parseInt(String.valueOf(old_matrix_d[md].charAt(2)));
+            old_matrix_data.set(md,temp);
         }
     }
 
@@ -263,41 +294,73 @@ public class Game_Screen implements Screen{
     }
 
     public void drawAlienMatrix(SpriteBatch spriteBatch){
-        Entity entity;
+        Entity entity, new_entity;
+        
         for (Integer e = 0; e < aliens.size(); e++) {
             entity = aliens.get(e);
+            if(old_matrix_data.get(entity.getID())[0] != matrix_data.get(entity.getID())[0]){
+                switch (matrix_data.get(entity.getID())[0]){
+                    case 1:
+                        new_entity = new Squid("squid.png",entity.getX(),entity.getY(),36f,30f,entity.speed);
+                        new_entity.setID(entity.getID());
+                        System.out.println("A squid was added.");
+                        aliens.add(new_entity);
+                        aliens.remove(entity);
+                        break;
+                    case 2:
+                        new_entity = new Crab("crab.png",entity.getX(),entity.getY(),36f,30f,entity.speed);
+                        new_entity.setID(entity.getID());
+                        System.out.println("A crab was added.");
+                        aliens.add(new_entity);
+                        aliens.remove(entity);
+                        break;
+                    case 3:
+                        new_entity = new Octopus("octopus.png",entity.getX(),entity.getY(),36f,30f,entity.speed);
+                        new_entity.setID(entity.getID());
+                        System.out.println("An octopus was added.");
+                        aliens.add(new_entity);
+                        aliens.remove(entity);
+                        break;
+                    case 0:
+                        aliens.remove(entity);
+                    default:
+                        break;
+                }
+                old_matrix_data.get(entity.getID())[0] = matrix_data.get(entity.getID())[0];
+            }
+            
             if(entity.getY() <= 30){
                 game_over = true;
             }
-            if(entity != null){
-                entity.draw(spriteBatch);
-                moveAlien(entity);
-                if(alien_shoot.nextInt(5000) == 2500){
-                    entity.shoot();
-                    matrix_data.get(entity.getID())[1] = 1;
-                }else{
-                    matrix_data.get(entity.getID())[1] = 0;
+            
+            entity.draw(spriteBatch);
+            moveAlien(entity);
+            if(alien_shoot.nextInt(5000) == 2500){
+                entity.shoot();
+                matrix_data.get(entity.getID())[1] = 1;
+            }else{
+                matrix_data.get(entity.getID())[1] = 0;
+            }
+            for (Integer b = 0; b < player.getBullets().size(); b++) {
+                if(entity.collision(player.getBullets().get(b))){
+                    aliens.remove(entity);
+                    player.setScore(player.getScore() + entity.getScore());
+                    player.destroyBullet(player.getBullets().get(b));
+                    matrix_data.get(entity.getID())[0] = 0;
+                    extra_data.set(5, player.getScore());
                 }
-                for (Integer b = 0; b < player.getBullets().size(); b++) {
-                    if(entity.collision(player.getBullets().get(b))){
-                        aliens.remove(entity);
-                        player.setScore(player.getScore() + entity.getScore());
-                        player.destroyBullet(player.getBullets().get(b));
-                        matrix_data.get(entity.getID())[0] = 0;
-                        extra_data.set(5, player.getScore());
-                    }
-                }
-                for (Integer b = 0; b < entity.getBullets().size(); b++) {
-                    if(player.collision(entity.getBullets().get(b))){
-                        entity.destroyBullet(entity.getBullets().get(b));
-                        player.lifeDown();
-                        extra_data.set(7, player.getLife());
-                        if(player.getLife() <= 0){
-                            game_over = true;
-                        }
+            }
+            for (Integer b = 0; b < entity.getBullets().size(); b++) {
+                if(player.collision(entity.getBullets().get(b))){
+                    entity.destroyBullet(entity.getBullets().get(b));
+                    player.lifeDown();
+                    extra_data.set(7, player.getLife());
+                    if(player.getLife() <= 0){
+                        game_over = true;
                     }
                 }
             }
+            
         }
         if(down){
             extra_data.set(1, extra_data.get(1)+1);
@@ -347,11 +410,37 @@ public class Game_Screen implements Screen{
             + "1 0/1 0/1 0/1 0/1 0/1 0/1 0/1 0/1 0/1 0/,"
             + "20,550,";
         extra_data.set(2, extra_data.get(2)+1);
-        for (int d = 2; d < extra_data.size(); d++) {
+        for (Integer d = 2; d < extra_data.size(); d++) {
             matrix += extra_data.get(d) + ",";
         }
-        for (int w = 0; w < walls_data.size(); w++) {
+        for (Integer w = 0; w < walls_data.size(); w++) {
             matrix += walls_data.get(w);
+        }
+    }
+    
+    public Entity createAlien(Integer rows, Integer columns){
+        Integer xi = extra_data.get(0), yi = extra_data.get(1);
+        Float speed = 1 + extra_data.get(2)*(1f/4f);
+        Entity entity;
+        
+        switch(matrix_data.get(columns+(10*rows))[0]){
+            case 1:
+                entity = new Squid("squid.png",(xi+(36f*columns)),(yi-(30f*rows)),36f,30f,speed);
+                entity.setID(columns+(10*rows));
+                System.out.println("A squid was added.");
+                return entity;
+            case 2:
+                entity = new Crab("crab.png",(xi+(36f*columns)),(yi-(30f*rows)),36f,30f,speed);
+                entity.setID(columns+(10*rows));
+                System.out.println("A crab was added.");
+                return entity;
+            case 3:
+                entity = new Octopus("octopus.png",(xi+(36f*columns)),(yi-(30f*rows)),36f,30f,speed);
+                entity.setID(columns+(10*rows));
+                System.out.println("An octopus was added.");
+                return entity;
+            default:
+                return null;
         }
     }
 
@@ -374,7 +463,7 @@ public class Game_Screen implements Screen{
     }
     
     @Override
-    public void dispose () {
+    public void dispose() {
         batch.dispose();
         try {
             client.stop();

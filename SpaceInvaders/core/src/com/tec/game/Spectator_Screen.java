@@ -48,7 +48,7 @@ public class Spectator_Screen implements Screen{
             + "1111111111111111111111111111111111111111111111111111111111111111111111"
             + "1111111111111111111111111111111111111111111111111111111111111111111111"
             + "1111111111111111111111111111111111111111111111111111111111111111111111"
-            + "1111111111111111111111111111111111111111111111111111111111111111111111";;
+            + "1111111111111111111111111111111111111111111111111111111111111111111111";
 
     @Override
     public void show(){
@@ -136,6 +136,32 @@ public class Spectator_Screen implements Screen{
 
         for (int s = 0; s < 280; s++) {
             walls_data.add(Integer.parseInt(String.valueOf(data[data.length-1].charAt(s))));
+        }
+    }
+    
+    public Entity createAlien(Integer rows, Integer columns){
+        Integer xi = extra_data.get(0), yi = extra_data.get(1);
+        Float speed = 1 + extra_data.get(2)*(1f/4f);
+        Entity entity;
+        
+        switch(matrix_data.get((columns+10)*rows)[0]){
+            case 1:
+                entity = new Squid("squid.png",(xi+(36f*columns)),(yi-(30f*rows)),36f,30f,speed);
+                entity.setID((columns+10)*rows);
+                System.out.println("A squid was added.");
+                return entity;
+            case 2:
+                entity = new Crab("crab.png",(xi+(36f*columns)),(yi-(30f*rows)),36f,30f,speed);
+                entity.setID((columns+10)*rows);
+                System.out.println("A crab was added.");
+                return entity;
+            case 3:
+                entity = new Octopus("octopus.png",(xi+(36f*columns)),(yi-(30f*rows)),36f,30f,speed);
+                entity.setID((columns+10)*rows);
+                System.out.println("An octopus was added.");
+                return entity;
+            default:
+                return null;
         }
     }
 

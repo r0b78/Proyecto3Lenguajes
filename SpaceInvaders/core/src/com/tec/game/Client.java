@@ -25,7 +25,7 @@ public class Client implements Runnable{
     private PrintWriter out;
     private BufferedReader in;
     private Boolean running = true;
-    private String recieved_data;
+    private String recieved_data = null;
 
     public Client(){}
     
@@ -45,13 +45,12 @@ public class Client implements Runnable{
     public void run() {
         while(running){
             if(socket != null){
-                    try {
-                        in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-                        recieved_data = in.readLine();
-                    } catch (IOException ex) {
-                        Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-                
+                try {
+                    in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                    recieved_data = in.readLine();
+                } catch (IOException ex) {
+                    Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
+                }
             }
         }
     }
