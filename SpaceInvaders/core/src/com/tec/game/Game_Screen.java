@@ -96,10 +96,12 @@ public class Game_Screen implements Screen{
                 try {
                     old_matrix = createDataFromInformation();
                     client.send(old_matrix);
-                    if(client.recieve() != null && matrix.length() >= 500){
-                       updateData();
+                    if(client.recieve() != null){
+                       matrix = client.recieve();
+                       if(matrix.length() >= 501){
+                            updateData();
+                       }
                     }
-                    matrix = client.recieve();
                     System.out.println("The new data is: "+ matrix);
                 } catch (IOException ex) {
                     Logger.getLogger(Game_Screen.class.getName()).log(Level.SEVERE, null, ex);
@@ -179,6 +181,7 @@ public class Game_Screen implements Screen{
     public void updateData(){
         String[] data = matrix.split(",");
         String[] matrix_d = data[0].split("/");
+        System.out.println(matrix_d.length);
         
         String[] old_data = old_matrix.split(",");
         String[] old_matrix_d = old_data[0].split("/");

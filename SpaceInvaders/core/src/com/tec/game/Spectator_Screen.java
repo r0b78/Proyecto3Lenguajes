@@ -10,7 +10,6 @@ package com.tec.game;
  * @author aaronsolera
  */
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
@@ -36,24 +35,10 @@ public class Spectator_Screen implements Screen{
     private Client client;
     private BitmapFont font;
     private Random alien_shoot;
-
-    private String matrix = 
-              "1 0/1 0/1 0/1 0/1 0/1 0/1 0/1 0/1 0/1 0/"
-            + "2 0/2 0/2 0/2 0/2 0/2 0/2 0/2 0/2 0/2 0/"
-            + "3 0/3 0/3 0/3 0/3 0/3 0/3 0/3 0/3 0/3 0/"
-            + "2 0/2 0/2 0/2 0/2 0/2 0/2 0/2 0/2 0/2 0/"
-            + "1 0/1 0/1 0/1 0/1 0/1 0/1 0/1 0/1 0/1 0,"
-            + "20,550,1,"
-            + "270,5,0,0,3,"
-            + "1111111111111111111111111111111111111111111111111111111111111111111111"
-            + "1111111111111111111111111111111111111111111111111111111111111111111111"
-            + "1111111111111111111111111111111111111111111111111111111111111111111111"
-            + "1111111111111111111111111111111111111111111111111111111111111111111111";
+    private String matrix, old_matrix;
 
     @Override
     public void show(){
-        initializeData();
-
         client = new Client();
         batch = new SpriteBatch();
         logo = new Sprite(new Texture("logo.png"));
@@ -69,11 +54,12 @@ public class Spectator_Screen implements Screen{
             new Thread(client).start();
         }
     }
-    @Override
+   @Override
     public void render (float  delta) {
         
         Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+        
         if(!connected){
             batch.begin();
             logo.setBounds((Gdx.graphics.getWidth()/2)-100, (Gdx.graphics.getHeight()/2), 200, 70);
@@ -85,8 +71,7 @@ public class Spectator_Screen implements Screen{
                 new Thread(client).start();
             }
         }else{
-            matrix = client.recieve();
-            if(matrix != null){   
+            if(!game_over){   
                 batch.begin();
                 logo.setBounds(10, Gdx.graphics.getHeight()-80, 200, 70);
                 logo.draw(batch);
@@ -96,10 +81,18 @@ public class Spectator_Screen implements Screen{
                 updateBunkers(batch);
                 font.draw(batch, "SCORE: " + player.getScore(), Gdx.graphics.getWidth()-100, Gdx.graphics.getHeight()-50);
                 batch.end();
+                ////////////////////////////////////
+                if(client.recieve() != null){
+                   matrix = client.recieve();
+                   if(matrix.length() >= 500){
+                   }
+                }
+                System.out.println("The new data is: "+ matrix);
+                ////////////////////////////////////
             }else{
                 batch.begin();
                 logo.setBounds((Gdx.graphics.getWidth()/2)-100, (Gdx.graphics.getHeight()/2), 200, 70);
-                font.draw(batch, "Waiting a game to spectate...", (Gdx.graphics.getWidth()/2)-90, (Gdx.graphics.getHeight()/2)-10);
+                font.draw(batch, "Game over, press R key to restart the game...", (Gdx.graphics.getWidth()/2)-135, (Gdx.graphics.getHeight()/2)-10);
                 logo.draw(batch);
                 batch.end();
             }
@@ -209,24 +202,6 @@ public class Spectator_Screen implements Screen{
             } 
         }
     }
-
-    public String createDataFromInformation(){
-        String data="";
-        for(Integer md = 0; md < matrix_data.size(); md++){
-            data += Integer.toString(matrix_data.get(md)[0]) + " " +Integer.toString(matrix_data.get(md)[1]);
-            if(md != matrix_data.size()-1){
-                data += "/";
-            }
-        }
-        for(Integer e = 0; e < extra_data.size(); e++){
-            data += "," + Integer.toString(extra_data.get(e));
-        }
-        data += ",";
-        for (Integer s = 0; s < walls_data.size(); s++){
-            data += Integer.toString(walls_data.get(s));
-        }
-        return data;
-    }
     
     public void updateBunkers(SpriteBatch spriteBatch){
         Entity alien, wall;
@@ -315,44 +290,11 @@ public class Spectator_Screen implements Screen{
             if(player.getLife()<3){
                 player.lifeUp();
             }
-            resetMatrix();
             initializeData();
             initializeGame(5,10);
         }
     }
     
-    public void resetGame(){
-        matrix = 
-              "1 0/1 0/1 0/1 0/1 0/1 0/1 0/1 0/1 0/1 0/"
-            + "2 0/2 0/2 0/2 0/2 0/2 0/2 0/2 0/2 0/2 0/"
-            + "3 0/3 0/3 0/3 0/3 0/3 0/3 0/3 0/3 0/3 0/"
-            + "2 0/2 0/2 0/2 0/2 0/2 0/2 0/2 0/2 0/2 0/"
-            + "1 0/1 0/1 0/1 0/1 0/1 0/1 0/1 0/1 0/1 0,"
-            + "20,550,1,"
-            + "270,5,0,0,3,"
-            + "1111111111111111111111111111111111111111111111111111111111111111111111"
-            + "1111111111111111111111111111111111111111111111111111111111111111111111"
-            + "1111111111111111111111111111111111111111111111111111111111111111111111"
-            + "1111111111111111111111111111111111111111111111111111111111111111111111";
-    }
-    
-    public void resetMatrix(){
-        matrix = 
-              "1 0/1 0/1 0/1 0/1 0/1 0/1 0/1 0/1 0/1 0/"
-            + "2 0/2 0/2 0/2 0/2 0/2 0/2 0/2 0/2 0/2 0/"
-            + "3 0/3 0/3 0/3 0/3 0/3 0/3 0/3 0/3 0/3 0/"
-            + "2 0/2 0/2 0/2 0/2 0/2 0/2 0/2 0/2 0/2 0/"
-            + "1 0/1 0/1 0/1 0/1 0/1 0/1 0/1 0/1 0/1 0/,"
-            + "20,550,";
-        extra_data.set(2, extra_data.get(2)+1);
-        for (int d = 2; d < extra_data.size(); d++) {
-            matrix += extra_data.get(d) + ",";
-        }
-        for (int w = 0; w < walls_data.size(); w++) {
-            matrix += walls_data.get(w);
-        }
-    }
-
     public void moveAlien(Entity entity){
         if(down){
             entity.moveDown();

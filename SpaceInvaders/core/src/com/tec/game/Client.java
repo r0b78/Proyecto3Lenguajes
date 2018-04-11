@@ -31,7 +31,7 @@ public class Client implements Runnable{
     
     public Boolean connect(){
         try {
-            socket = new Socket("localhost",8081);
+            socket = new Socket("192.168.100.5",8081);
             out = new PrintWriter(socket.getOutputStream(), true);
             System.out.println("Successed connection to the server");
             return true;
