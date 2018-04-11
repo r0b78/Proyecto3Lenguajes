@@ -28,13 +28,35 @@
 
 #define NLOOPS 1000000
 
-const char *port = "8080";
+const char *port = "8081";
 int numConnections = 0;
 int scClien[100];
 int lenClientes=0;
 
 int matrizJugo []={1,2,3,1,2,3,1,23,123,13,32};
 int lenMatriz=0;
+///
+//10 columnas 5 filas;
+///
+////matrz , Xposmatriz, Yposmatriz,Velmatriz,Xjug,Vjug,Puntaje,diparojug,murods
+///bicho disparo/
+/*
+ private String matrix = 
+                  "2 0/2 0/2 0/2 0/2 0/2 0/2 0/2 0/2 0/2 0/"
+                + "1 0/1 0/1 0/1 0/1 0/1 0/1 0/1 0/1 0/1 0/"
+                + "3 0/3 0/3 0/3 0/3 0/3 0/3 0/3 0/3 0/3 0/"
+                + "1 0/1 0/1 0/1 0/1 0/1 0/1 0/1 0/1 0/1 0/"
+                + "2 0/2 0/2 0/2 0/2 0/2 0/2 0/2 0/2 0/2 0,"
+                + "390,600,1,"
+                + "390,5,0,0,"
+                + "1111111111111111111111111111111111111111111111111111111111111111111111,"
+                + "1111111111111111111111111111111111111111111111111111111111111111111111,"
+                + "1111111111111111111111111111111111111111111111111111111111111111111111";
+
+Escribe un mensaje...
+ */
+
+
 
 /* Added: A lock to access numConnections.
    Note that this file needs to be compiled
@@ -62,6 +84,12 @@ int get(int n,struct Node *lista);
 struct Node* crearLista();
 int deletee(struct Node** lista,int n);
 void printList(struct Node *node);
+int split (const char *str, char c, char ***arr);
+void append(struct Node** head_ref, int new_data);
+int getLargo(struct Node* node);
+int parsearStringMatirz(struct Node** headd,struct Node** head2,char* string);
+int matrizAString(struct Node* lista1,struct Node* lista2,char** stringSalida);
+int armarEstructura(char* s,char*** arr,int lenArr);
 
 
 
@@ -108,32 +136,25 @@ int main(int argc, char *argv[])
 void *service_single_client(void *args) {
     struct workerArgs *wa;
     int socket, nbytes, i;
-    char buffer[100];
+    char buffer[700];
     wa = (struct workerArgs*) args;
     socket = wa->socket;
 
     pthread_detach(pthread_self());
-
+    int splitLen=0;
     /* ADDED: Protect access to numConnections with the lock */
     #ifdef MUTEX
     pthread_mutex_lock (&lock);
     #endif
 
-    /* The following two loops will result in numConnections
-       being ultimately incremented by just one, but we do
-       this with these loops to increase the chances of a
-       race condition happening */
-    for(i=0; i< NLOOPS; i++)
-        numConnections++;
-    for(i=0; i< NLOOPS-1; i++)
-        numConnections--;
-    fprintf(stderr, "+ Number of connections is %d\n", numConnections);
-
+    numConnections++;
     /* ADDED: Unlock the lock when we're done with it. */
     #ifdef MUTEX
     pthread_mutex_unlock (&lock);
     #endif
-
+      struct Node* listaPersonaje;
+       struct Node* lista2Disparo;
+       char* StringMandar[700];
     while(1)
     {
         memset(buffer,0,strlen(buffer));
@@ -146,9 +167,10 @@ void *service_single_client(void *args) {
             close(socket);
             pthread_exit(NULL);
         }
-        /* Ignore anything that's actually recv'd. We just want
-           to keep the connection open until the client disconnects */
-        printf(buffer);
+        /* 
+           
+                                     */
+        printf("\nEste es el buff: %s\n",buffer);
         #ifdef MUTEX
          pthread_mutex_lock (&lock);
         #endif
@@ -157,44 +179,94 @@ void *service_single_client(void *args) {
          }
          //////////Recorta el string para compararlo
          buffer[strlen(buffer)-1]=0;
+         char** spliit=NULL;
+         splitLen= split(buffer,',',&spliit);
+         
+         printf("LennSpli:%d\n",splitLen>0);
+         
+         char* s=spliit[0];
+         for(int i=0;i<splitLen;i++){
+             printf("Spliita:%s \n",spliit[i]);
+         
+         }
+                    
          ///////////////
-        
-         if(strcmp(buffer,"esto")==0){
-             printf("entro\n");
-             matrizJugo[1]=300;
+         if(splitLen>0){
+             printf("LenLista%d\n",splitLen);
+             if(strcmp(spliit[0],"add")==0){
+                 
+                 
+             }else{
+                if(strcmp(spliit[0],"delete")==0){
+                 printf(spliit[1]);
+                 
+                 
+                }else{
+                  if(splitLen==10){
+                    printf("cayo al else\n");
+                    listaPersonaje=crearLista();
+                    lista2Disparo=crearLista();
+                    printf("cayo al paso matri\n");
+                    
+                    parsearStringMatirz(&listaPersonaje,&lista2Disparo,s);
+                    
+                    printf("cpaso stri%sngMatri\n",s);
+                    
+                    memset(StringMandar,0,sizeof(StringMandar));
+                    matrizAString(listaPersonaje,lista2Disparo,&StringMandar);
+                    
+                    armarEstructura(StringMandar,spliit,splitLen);
+                    
+                    strcat(StringMandar,"\n");
+                    printf("LInea Mandar %s \n",StringMandar);
+                    printList(listaPersonaje);
+                    printf("Division\n");
+                    printList(lista2Disparo);
+                    
+                    printf("Division\n");
+                    
+                    sendall(StringMandar);
+            }else {
+                printf("Esta en el ELSE ELSE \n");
+                sendall(buffer);
+                
+            }
+                }
+                
+             }
          }
-          if(strcmp(buffer,"aque")==0){
-             printf("entro\n");
-             matrizJugo[4]=400;
-         }
+         
+                    printf("salio del if\n");
+         
          
 //        for(i=0; i< 9; i++){
 //          //  char * str[10];
-//            printf("Numero:%d \n",matrizJugo[i]);
-//        
+//            printf("Numero:%d \n",matrizJugo[i]); 
+       //  strcat(buffer,"\n");
 //            //sprintf(str, "%d ", matrizJugo[i]);
-//        //sendall(str);
+       // sendall(buffer);
 //        }
         fprintf(stderr, "- Number of connections is %d\n", numConnections);
         
         #ifdef MUTEX
     pthread_mutex_unlock (&lock);
         #endif
-    strcat(buffer,"\n");    
-    sendall(buffer);
+
+    
+    ///Concatena \n para que java detecte readline
+//    strcat(buffer,"\n");    
+//    ///
+//    sendall(buffer);
         //sendall(buffer);
     }
     
     
 
-    /* ADDED: Same as the above loops, but decrementing numConnections by one */
+   
     #ifdef MUTEX
     pthread_mutex_lock (&lock);
     #endif
-    for(i=0; i< NLOOPS; i++)
-        numConnections--;
-    for(i=0; i< NLOOPS-1; i++)
-        numConnections++;
+    numConnections--;
     fprintf(stderr, "- Number of connections is %d\n", numConnections);
     
     #ifdef MUTEX
@@ -334,7 +406,7 @@ void push(struct Node** head_ref, int new_data)
     new_node->next = (*head_ref);
   
     (*head_ref)    = new_node;
-    largoLista++;
+  //  largoLista++;
 }
 void printList(struct Node *node)
 {
@@ -385,7 +457,176 @@ int deletee(struct Node** lista,int n){
     }
     return 0;
 }
+int split (const char *str, char c, char ***arr)
+{
+  int count = 1;
+  int token_len = 1;
+  int i = 0;
+  char *p;
+  char *t;
 
+  p = str;
+  while (*p != '\0')
+    {
+      if (*p == c)
+        count++;
+      p++;
+    }
 
+  *arr = (char**) malloc(sizeof(char*) * count);
+  if (*arr == NULL)
+    exit(1);
 
+  p = str;
+  while (*p != '\0')
+    {
+      if (*p == c)
+      {
+        (*arr)[i] = (char*) malloc( sizeof(char) * token_len );
+        if ((*arr)[i] == NULL)
+          exit(1);
+
+        token_len = 0;
+        i++;
+      }
+      p++;
+      token_len++;
+    }
+  (*arr)[i] = (char*) malloc( sizeof(char) * token_len );
+  if ((*arr)[i] == NULL)
+    exit(1);
+
+  i = 0;
+  p = str;
+  t = ((*arr)[i]);
+  while (*p != '\0')
+    {
+      if (*p != c && *p != '\0')
+      {
+        *t = *p;
+        t++;
+      }
+      else
+      {
+        *t = '\0';
+        i++;
+        t = ((*arr)[i]);
+      }
+      p++;
+    }
+
+  return count;
+}
+int getLargo(struct Node* node){
+    int largo=0;
+    while (node != NULL)
+  {
+        largo++;
+        node = node->next;
+  }
+    return largo; 
+}
+int parsearStringMatirz(struct Node** headd,struct Node** head2,char* string){
+    
+    struct Node*tmpL=*headd;
+    struct Node* tmpL2=*head2;
+    
+    
+    char** tmp;
+    int lenSplit=split(string,'/',&tmp);
+    
+    printf("este es Len%d",lenSplit);
+    int lenInterno;
+    for(int i=0;i<lenSplit-1;i++){
+        printf("Este es el array: %s\n",tmp[i]);
+        char**tmp2;
+        lenInterno=split(tmp[i],' ',&tmp2);
+        char* n1=tmp2[0];
+        char* n2=tmp2[1];
+        printf("as1df %s,\n",n1);
+       // printList(tmpL);
+        printf("as2df %s,\n",n2);
+        // printList(tmpL2);
+        int nuevoInt=atoi(n1);
+        int nuevoInt2=atoi(n2);
+        append(&tmpL,nuevoInt);
+        append(&tmpL2,nuevoInt2);
+       
+       
+        
+        
+        
+    }
+    *headd=tmpL;
+    *head2=tmpL2;
+    return 0;
+    
+}
+
+int matrizAString(struct Node* lista1,struct Node* lista2,char** stringSalida){
+    
+    memset(stringSalida,0,sizeof(stringSalida));
+    for (int i=0;i<getLargo(lista1);i++){
+        printf("LenListEssdfdfff: %dsdfsdfsdfsdf %d\n",i,get(i,lista1));
+        char buf[500];
+        memset(buf,0,sizeof(buf));
+        sprintf(buf,"%d",get(i,lista1));
+        strcat(stringSalida,buf);
+        
+        strcat(stringSalida," ");
+        char buf2[500];
+        memset(buf2,0,sizeof(buf2));
+        sprintf(buf2,"%d",get(i,lista2));
+        strcat(stringSalida,buf2);
+        
+        strcat(stringSalida,"/");
+        
+        
+      //  strcat(stringSalida,"f ");
+      //  strcat(stringSalida,get(i,lista2)+'0');
+      //  strcat(stringSalida,"/");
+        
+        
+    }
+    
+    return stringSalida;
+    
+}
+int armarEstructura(char* s,char*** arr,int lenArr){
+    for (int i=0;i<lenArr;i++){
+        strcat(s,arr[i]);
+        if(i!=lenArr-1){
+            strcat(s,",");
+        }
+    }
+}
+void append(struct Node** head_ref, int new_data)
+{
+    /* 1. allocate node */
+    struct Node* new_node = (struct Node*) malloc(sizeof(struct Node));
+
+    struct Node *last = *head_ref;  /* used in step 5*/
+ 
+    /* 2. put in the data  */
+    new_node->data  = new_data;
+
+    /* 3. This new node is going to be the last node, so make next 
+          of it as NULL*/
+    new_node->next = NULL;
+
+    /* 4. If the Linked List is empty, then make the new node as head */
+    if (*head_ref == NULL)
+    {
+       *head_ref = new_node;
+       return;
+    }  
+     
+    /* 5. Else traverse till the last node */
+    while (last->next != NULL)
+        last = last->next;
+ 
+    /* 6. Change the next of last node */
+    last->next = new_node;
+    return;    
+}
 
