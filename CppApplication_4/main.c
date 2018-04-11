@@ -136,7 +136,7 @@ int main(int argc, char *argv[])
 void *service_single_client(void *args) {
     struct workerArgs *wa;
     int socket, nbytes, i;
-    char buffer[700];
+    char buffer[1000];
     wa = (struct workerArgs*) args;
     socket = wa->socket;
 
@@ -153,11 +153,13 @@ void *service_single_client(void *args) {
     pthread_mutex_unlock (&lock);
     #endif
       struct Node* listaPersonaje;
-       struct Node* lista2Disparo;
-       char* StringMandar[700];
+      struct Node* lista2Disparo;
+      char* StringMandar[1000];
     while(1)
     {
         memset(buffer,0,strlen(buffer));
+        memset(StringMandar,0,strlen(StringMandar));
+        
         nbytes = recv(socket, buffer, sizeof(buffer), 0);
         if (nbytes == 0)
             break;
@@ -180,6 +182,7 @@ void *service_single_client(void *args) {
          //////////Recorta el string para compararlo
          buffer[strlen(buffer)-1]=0;
          char** spliit=NULL;
+         
          splitLen= split(buffer,',',&spliit);
          
          printf("LennSpli:%d\n",splitLen>0);
@@ -537,7 +540,7 @@ int parsearStringMatirz(struct Node** headd,struct Node** head2,char* string){
     
     printf("este es Len%d",lenSplit);
     int lenInterno;
-    for(int i=0;i<lenSplit;i++){
+    for(int i=0;i<lenSplit-1;i++){
         printf("Este es el array: %s\n",tmp[i]);
         char**tmp2;
         lenInterno=split(tmp[i],' ',&tmp2);
@@ -578,9 +581,9 @@ int matrizAString(struct Node* lista1,struct Node* lista2,char** stringSalida){
         memset(buf2,0,sizeof(buf2));
         sprintf(buf2,"%d",get(i,lista2));
         strcat(stringSalida,buf2);
-        
+        if(i!=getLargo(lista1)-1){
         strcat(stringSalida,"/");
-        
+        }
         
       //  strcat(stringSalida,"f ");
       //  strcat(stringSalida,get(i,lista2)+'0');
@@ -593,7 +596,10 @@ int matrizAString(struct Node* lista1,struct Node* lista2,char** stringSalida){
     
 }
 int armarEstructura(char* s,char*** arr,int lenArr){
-    for (int i=1;i<lenArr;i++){
+    
+    strcat(s,",");
+    strcat(s,arr[1]);
+    for (int i=2;i<lenArr;i++){
         strcat(s,arr[i]);
         if(i!=lenArr-1){
             strcat(s,",");
