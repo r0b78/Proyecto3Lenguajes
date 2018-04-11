@@ -537,7 +537,7 @@ int parsearStringMatirz(struct Node** headd,struct Node** head2,char* string){
     
     printf("este es Len%d",lenSplit);
     int lenInterno;
-    for(int i=0;i<lenSplit-1;i++){
+    for(int i=0;i<lenSplit;i++){
         printf("Este es el array: %s\n",tmp[i]);
         char**tmp2;
         lenInterno=split(tmp[i],' ',&tmp2);
@@ -593,7 +593,7 @@ int matrizAString(struct Node* lista1,struct Node* lista2,char** stringSalida){
     
 }
 int armarEstructura(char* s,char*** arr,int lenArr){
-    for (int i=0;i<lenArr;i++){
+    for (int i=1;i<lenArr;i++){
         strcat(s,arr[i]);
         if(i!=lenArr-1){
             strcat(s,",");
