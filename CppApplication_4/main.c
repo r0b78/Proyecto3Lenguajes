@@ -27,14 +27,13 @@
 
 
 #define NLOOPS 1000000
-
 const char *port = "8081";
 int numConnections = 0;
 int scClien[100];
 int lenClientes=0;
-
-int matrizJugo []={1,2,3,1,2,3,1,23,123,13,32};
 int lenMatriz=0;
+
+
 ///
 //10 columnas 5 filas;
 ///
@@ -75,8 +74,20 @@ struct Node
   int data;
   struct Node *next;
 };
+
+////////////Variables Globales
+
+
 struct Node* listaPersonaje;
 struct Node* lista2Disparo;
+int NaveNodriza=0;
+int xNave=0;
+int yNave=0;
+int cambio=0;
+
+
+
+///////////////Metodos del Server
 void *accept_clients(void *args);
 void *service_single_client(void *args);
 void *lineaComandos(void *args);
@@ -91,8 +102,8 @@ int getLargo(struct Node* node);
 int parsearStringMatirz(struct Node** headd,struct Node** head2,char* string);
 int matrizAString(struct Node* lista1,struct Node* lista2,char** stringSalida);
 int armarEstructura(char* s,char*** arr,int lenArr);
-
-
+int set(int n,struct Node** listaa,int newData);
+int addPersonaje(struct Node** head,int x,int y,int tipo);
 
 //Funcion Principal del server
 int main(int argc, char *argv[])
@@ -106,6 +117,8 @@ int main(int argc, char *argv[])
     sigset_t new;
     sigemptyset (&new);
     sigaddset(&new, SIGPIPE);
+    listaPersonaje=crearLista();
+    lista2Disparo=crearLista();
     if (pthread_sigmask(SIG_BLOCK, &new, NULL) != 0) 
     {
         perror("Unable to mask SIGPIPE");
@@ -141,10 +154,61 @@ int main(int argc, char *argv[])
 }
 void *lineaComandos(void *args){
     char str1[20];
+    char** strSpli=NULL;
     while(1){
         memset(str1,0,strlen(str1));
+       // memset(strSpli,0,strlen(strSpli));
+        
         printf("Enter name: ");
+        
         scanf("%s", str1);
+        
+        int c=split(str1,'-',&strSpli);
+         
+        if(c>1){
+           #ifdef MUTEX
+         pthread_mutex_lock (&lock);
+         #endif
+
+            char * comp=strSpli[0];
+          //  comp[strlen(comp)-1]=0;
+            
+        if (strcmp(comp,"add")==0){
+             printf("entro %d\n",c);
+            if(c>=3){
+                
+                printf("entro %d\n",c);
+                for (int i=0;i<c;i++){
+                    printf("Split:%s\n",strSpli[i]);
+                }
+              //  const char* a=strSpli[1];
+                int x=atoi(strSpli[1]);
+                 printf("entro %d\n",c);
+                int y=atoi(strSpli[2]);
+                int tipo=atoi(strSpli[3]);
+              //   printf("Split:%s\n",strSpli[2]);
+                addPersonaje(&listaPersonaje,x,y,tipo);
+                printList(listaPersonaje);
+                cambio=1;
+            }
+        }
+        if (strcmp(comp,"del")==0){
+            if(c>=3){
+                 printf("ent2ro %d\n",c);
+                int x=atoi(strSpli[1]);
+                int y=atoi(strSpli[2]);
+                addPersonaje(&listaPersonaje,x,y,0);
+                 printList(listaPersonaje);
+                 cambio=1;
+            }
+            
+        }
+             /* ADDED: Unlock the lock when we're done with it. */
+        #ifdef MUTEX
+        pthread_mutex_unlock (&lock);
+        #endif
+   
+      }
         
         printf("%s\n",str1);
     }
@@ -170,6 +234,7 @@ void *service_single_client(void *args) {
     #endif
      
     char* StringMandar[1000];
+    int cont=0;
     while(1)
     {
         memset(buffer,0,strlen(buffer));
@@ -187,7 +252,7 @@ void *service_single_client(void *args) {
         /* 
            
                                      */
-        printf("\nEste es el buff: %s\n",buffer);
+       // printf("\nEste es el buff: %s\n",buffer);
         #ifdef MUTEX
          pthread_mutex_lock (&lock);
         #endif
@@ -198,11 +263,11 @@ void *service_single_client(void *args) {
          
          splitLen= split(buffer,',',&spliit);
          
-         printf("LennSpli:%d\n",splitLen);
+        // printf("LennSpli:%d\n",splitLen);
          
          char* s=spliit[0];
          for(int i=0;i<splitLen;i++){
-             printf("Spliita:%s \n",spliit[i]);
+           //  printf("Spliita:%s \n",spliit[i]);
          
          }
                     
@@ -220,31 +285,41 @@ void *service_single_client(void *args) {
                 }else{
                   if(splitLen==10){
                   //  printf("cayo al else\n");
-                    listaPersonaje=crearLista();
-                    lista2Disparo=crearLista();
-                  //  printf("cayo al paso matri\n");
                     
-                    parsearStringMatirz(&listaPersonaje,&lista2Disparo,s);
+                  //  printf("cayo al paso matri\n");
+                    if(cambio==0){
+                        listaPersonaje=crearLista();
+                        lista2Disparo=crearLista();
+                        parsearStringMatirz(&listaPersonaje,&lista2Disparo,s);
+                    }
+                    if(cambio==1){
+                        if(cont>50){
+                            cambio=0;
+                            
+                        }
+                        cont++;
+                    }
                     
                   //  printf("cpaso stri%sngMatri\n",s);
-                    
                     memset(StringMandar,0,sizeof(StringMandar));
                     matrizAString(listaPersonaje,lista2Disparo,&StringMandar);
-                    
                     armarEstructura(StringMandar,spliit,splitLen);
-                    
                     strcat(StringMandar,"\n");
-                    printf("LInea Mandar %s \n",StringMandar);
+                //    printf("LInea Mandar %s \n",StringMandar);
                    // printList(listaPersonaje);
-                    printf("Division\n");
+              //      printf("Division\n");
                    // printList(lista2Disparo);
                     
                    // printf("Division\n");
                     
+                    
                     sendall(StringMandar);
+                    
             }else {
-                printf("Esta en el ELSE ELSE \n");
-                sendall(buffer);
+         //       printf("Esta en el ELSE ELSE \n");
+              //  sendall(buffer);
+         
+                
                 
             }
                 }
@@ -252,7 +327,7 @@ void *service_single_client(void *args) {
              }
          }
          
-                    printf("salio del if\n");
+           //         printf("salio del if\n");
          
          
 //        for(i=0; i< 9; i++){
@@ -262,7 +337,6 @@ void *service_single_client(void *args) {
 //            //sprintf(str, "%d ", matrizJugo[i]);
        // sendall(buffer);
 //        }
-        fprintf(stderr, "- Number of connections is %d\n", numConnections);
         
         #ifdef MUTEX
     pthread_mutex_unlock (&lock);
@@ -620,33 +694,49 @@ int armarEstructura(char* s,char*** arr,int lenArr){
         }
     }
 }
+int addPersonaje(struct Node** head,int x,int y,int tipo){
+    int posicion=((y)*10)+x;
+    set(posicion,head,tipo);
+    
+    
+}
 void append(struct Node** head_ref, int new_data)
 {
-    /* 1. allocate node */
     struct Node* new_node = (struct Node*) malloc(sizeof(struct Node));
 
-    struct Node *last = *head_ref;  /* used in step 5*/
+    struct Node *last = *head_ref; 
  
-    /* 2. put in the data  */
     new_node->data  = new_data;
 
-    /* 3. This new node is going to be the last node, so make next 
-          of it as NULL*/
     new_node->next = NULL;
 
-    /* 4. If the Linked List is empty, then make the new node as head */
     if (*head_ref == NULL)
     {
        *head_ref = new_node;
        return;
     }  
      
-    /* 5. Else traverse till the last node */
     while (last->next != NULL)
         last = last->next;
  
-    /* 6. Change the next of last node */
     last->next = new_node;
     return;    
+}
+int set(int n,struct Node** listaa,int newData){
+    int cont=0;
+    struct Node* tmp=*listaa;
+    while (tmp!=NULL){
+        if(cont==n){
+            printf("Esto");
+            (tmp)->data=newData;
+           
+        }
+        
+        tmp=tmp->next;
+        cont++;
+    }
+    
+    
+    return 100000;
 }
 
