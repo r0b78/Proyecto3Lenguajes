@@ -5,13 +5,9 @@
  */
 package com.tec.game;
 
-import com.badlogic.gdx.scenes.scene2d.actions.RunnableAction;
-
 import java.io.BufferedReader;
-import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.logging.Level;
@@ -31,14 +27,13 @@ public class Client implements Runnable{
     
     public Boolean connect(){
         try {
-            socket = new Socket("192.168.100.5",8081);
+            socket = new Socket("localhost",8081);
             out = new PrintWriter(socket.getOutputStream(), true);
             System.out.println("Successed connection to the server");
             return true;
         } catch (IOException ex) {
             return false;
         }
-        
     }
     
     @Override
