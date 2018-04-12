@@ -612,12 +612,12 @@ int armarEstructura(char* s,char*** arr,int lenArr){
     
     strcat(s,",");
     strcat(s,arr[1]);
+    strcat(s,",");
     for (int i=2;i<lenArr;i++){
+        strcat(s,arr[i]);
         if(i!=lenArr-1){
             strcat(s,",");
         }
-        strcat(s,arr[i]);
-       
     }
 }
 void append(struct Node** head_ref, int new_data)
