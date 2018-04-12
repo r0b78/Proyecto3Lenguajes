@@ -75,10 +75,11 @@ struct Node
   int data;
   struct Node *next;
 };
-int largoLista=0;
-
+struct Node* listaPersonaje;
+struct Node* lista2Disparo;
 void *accept_clients(void *args);
 void *service_single_client(void *args);
+void *lineaComandos(void *args);
 void push(struct Node** head_ref, int new_data);
 int get(int n,struct Node *lista);
 struct Node* crearLista();
@@ -101,7 +102,7 @@ int main(int argc, char *argv[])
     
     
     pthread_t server_thread;
-
+    pthread_t command_Line;
     sigset_t new;
     sigemptyset (&new);
     sigaddset(&new, SIGPIPE);
@@ -115,14 +116,20 @@ int main(int argc, char *argv[])
     #ifdef MUTEX
     pthread_mutex_init(&lock, NULL);
     #endif
-
+    
+    if (pthread_create(&command_Line, NULL, lineaComandos, NULL) < 0)
+    {
+        perror("command line thread");
+        exit(-1);
+    }
+    
     if (pthread_create(&server_thread, NULL, accept_clients, NULL) < 0)
     {
         perror("Could not create server thread");
         exit(-1);
     }
     
-    
+    pthread_join(command_Line,NULL);
     pthread_join(server_thread, NULL);
     
     /* ADDED: Destroy the lock */
@@ -132,7 +139,16 @@ int main(int argc, char *argv[])
 
     pthread_exit(NULL);
 }
-
+void *lineaComandos(void *args){
+    char str1[20];
+    while(1){
+        memset(str1,0,strlen(str1));
+        printf("Enter name: ");
+        scanf("%s", str1);
+        
+        printf("%s\n",str1);
+    }
+}
 void *service_single_client(void *args) {
     struct workerArgs *wa;
     int socket, nbytes, i;
@@ -152,9 +168,8 @@ void *service_single_client(void *args) {
     #ifdef MUTEX
     pthread_mutex_unlock (&lock);
     #endif
-      struct Node* listaPersonaje;
-      struct Node* lista2Disparo;
-      char* StringMandar[1000];
+     
+    char* StringMandar[1000];
     while(1)
     {
         memset(buffer,0,strlen(buffer));
@@ -176,16 +191,14 @@ void *service_single_client(void *args) {
         #ifdef MUTEX
          pthread_mutex_lock (&lock);
         #endif
-         for(int x=0;x<strlen(buffer);x++){
-             printf("Letra: %c \n",buffer[x]);
-         }
+         
          //////////Recorta el string para compararlo
-         buffer[strlen(buffer)-1]=0;
+        // buffer[strlen(buffer)-1]=0;
          char** spliit=NULL;
          
          splitLen= split(buffer,',',&spliit);
          
-         printf("LennSpli:%d\n",splitLen>0);
+         printf("LennSpli:%d\n",splitLen);
          
          char* s=spliit[0];
          for(int i=0;i<splitLen;i++){
@@ -195,7 +208,7 @@ void *service_single_client(void *args) {
                     
          ///////////////
          if(splitLen>0){
-             printf("LenLista%d\n",splitLen);
+           //  printf("LenLista%d\n",splitLen);
              if(strcmp(spliit[0],"add")==0){
                  
                  
@@ -206,14 +219,14 @@ void *service_single_client(void *args) {
                  
                 }else{
                   if(splitLen==10){
-                    printf("cayo al else\n");
+                  //  printf("cayo al else\n");
                     listaPersonaje=crearLista();
                     lista2Disparo=crearLista();
-                    printf("cayo al paso matri\n");
+                  //  printf("cayo al paso matri\n");
                     
                     parsearStringMatirz(&listaPersonaje,&lista2Disparo,s);
                     
-                    printf("cpaso stri%sngMatri\n",s);
+                  //  printf("cpaso stri%sngMatri\n",s);
                     
                     memset(StringMandar,0,sizeof(StringMandar));
                     matrizAString(listaPersonaje,lista2Disparo,&StringMandar);
@@ -222,11 +235,11 @@ void *service_single_client(void *args) {
                     
                     strcat(StringMandar,"\n");
                     printf("LInea Mandar %s \n",StringMandar);
-                    printList(listaPersonaje);
+                   // printList(listaPersonaje);
                     printf("Division\n");
-                    printList(lista2Disparo);
+                   // printList(lista2Disparo);
                     
-                    printf("Division\n");
+                   // printf("Division\n");
                     
                     sendall(StringMandar);
             }else {
@@ -313,7 +326,7 @@ void *accept_clients(void *args)
         perror("getaddrinfo() failed");
         pthread_exit(NULL);
     }
-
+    
     for(p = res;p != NULL; p = p->ai_next) 
     {
         if ((serverSocket = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) 
@@ -428,7 +441,7 @@ int get(int n,struct Node *lista){
    
     while (lista!=NULL){
         if(cont==n){
-            printf("Esto");
+        //    printf("Esto");
             return lista->data;
            
         }
@@ -455,7 +468,7 @@ int deletee(struct Node** lista,int n){
         aux=tmp;
         tmp =tmp->next;
         cont++;
-        printf("asdf\n");
+      //  printf("asdf\n");
         
     }
     return 0;
@@ -538,17 +551,17 @@ int parsearStringMatirz(struct Node** headd,struct Node** head2,char* string){
     char** tmp;
     int lenSplit=split(string,'/',&tmp);
     
-    printf("este es Len%d",lenSplit);
+   // printf("este es Len%d",lenSplit);
     int lenInterno;
     for(int i=0;i<lenSplit-1;i++){
-        printf("Este es el array: %s\n",tmp[i]);
+      //  printf("Este es el array: %s\n",tmp[i]);
         char**tmp2;
         lenInterno=split(tmp[i],' ',&tmp2);
         char* n1=tmp2[0];
         char* n2=tmp2[1];
-        printf("as1df %s,\n",n1);
+      //  printf("as1df %s,\n",n1);
        // printList(tmpL);
-        printf("as2df %s,\n",n2);
+     //   printf("as2df %s,\n",n2);
         // printList(tmpL2);
         int nuevoInt=atoi(n1);
         int nuevoInt2=atoi(n2);
@@ -570,7 +583,7 @@ int matrizAString(struct Node* lista1,struct Node* lista2,char** stringSalida){
     
     memset(stringSalida,0,sizeof(stringSalida));
     for (int i=0;i<getLargo(lista1);i++){
-        printf("LenListEssdfdfff: %dsdfsdfsdfsdf %d\n",i,get(i,lista1));
+       // printf("LenListEssdfdfff: %dsdfsdfsdfsdf %d\n",i,get(i,lista1));
         char buf[500];
         memset(buf,0,sizeof(buf));
         sprintf(buf,"%d",get(i,lista1));
@@ -600,10 +613,11 @@ int armarEstructura(char* s,char*** arr,int lenArr){
     strcat(s,",");
     strcat(s,arr[1]);
     for (int i=2;i<lenArr;i++){
-        strcat(s,arr[i]);
         if(i!=lenArr-1){
             strcat(s,",");
         }
+        strcat(s,arr[i]);
+       
     }
 }
 void append(struct Node** head_ref, int new_data)
