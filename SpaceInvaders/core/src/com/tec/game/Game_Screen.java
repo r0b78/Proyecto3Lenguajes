@@ -20,7 +20,6 @@ public class Game_Screen implements Screen{
     private Sprite logo, limit;
     private ArrayList<Entity> aliens, walls;
     private ArrayList<Integer[]> matrix_data;
-    private ArrayList<Integer[]> old_matrix_data;
     private ArrayList<Integer> extra_data;
     private ArrayList<Integer> walls_data;
     private Boolean back = false, down = false,connected = false, game_over = false;
@@ -35,7 +34,7 @@ public class Game_Screen implements Screen{
             + "3 0/3 0/3 0/3 0/3 0/3 0/3 0/3 0/3 0/3 0/"
             + "2 0/2 0/2 0/2 0/2 0/2 0/2 0/2 0/2 0/2 0/"
             + "1 0/1 0/1 0/1 0/1 0/1 0/1 0/1 0/1 0/1 0,"
-            + "20,550,1,"
+            + "20,550,0,"
             + "270,5,0,0,3,"
             + "1111111111111111111111111111111111111111111111111111111111111111111111"
             + "1111111111111111111111111111111111111111111111111111111111111111111111"
@@ -120,11 +119,11 @@ public class Game_Screen implements Screen{
     public void keyboardEventHandler(){
         if(Gdx.input.isKeyPressed(Input.Keys.LEFT)){
             player.moveLeft();
-            extra_data.set(3, extra_data.get(3)-1);
+            extra_data.set(3, player.getX().intValue());
         }
         if(Gdx.input.isKeyPressed(Input.Keys.RIGHT)){
             player.moveRight();
-            extra_data.set(3, extra_data.get(3)+1);
+            extra_data.set(3, player.getX().intValue());
         }
         if(Gdx.input.isKeyJustPressed(Input.Keys.SPACE)){
             player.shoot();
@@ -154,7 +153,6 @@ public class Game_Screen implements Screen{
 
     public void initializeData(){
         matrix_data = new ArrayList<Integer[]>();
-        old_matrix_data = new ArrayList<Integer[]>();
         extra_data = new ArrayList<Integer>();
         walls_data =  new ArrayList<Integer>();
 
@@ -166,7 +164,6 @@ public class Game_Screen implements Screen{
             temp[0] = Integer.parseInt(String.valueOf(matrix_d[md].charAt(0)));
             temp[1] = Integer.parseInt(String.valueOf(matrix_d[md].charAt(2)));
             matrix_data.add(temp);
-            old_matrix_data.add(temp);
         }
 
         for(Integer e = 1; e < data.length-1; e++) {
@@ -182,9 +179,6 @@ public class Game_Screen implements Screen{
         String[] data = matrix.split(",");
         String[] matrix_d = data[0].split("/");
         System.out.println(matrix_d.length);
-        
-        String[] old_data = old_matrix.split(",");
-        String[] old_matrix_d = old_data[0].split("/");
 
         for(Integer md = 0; md < matrix_d.length; md++) {
             Integer[] temp = new Integer[2];
@@ -192,18 +186,11 @@ public class Game_Screen implements Screen{
             temp[1] = Integer.parseInt(String.valueOf(matrix_d[md].charAt(2)));
             matrix_data.set(md,temp);
         }
-        
-        for(Integer md = 0; md < old_matrix_d.length; md++) {
-            Integer[] temp = new Integer[2];
-            temp[0] = Integer.parseInt(String.valueOf(old_matrix_d[md].charAt(0)));
-            temp[1] = Integer.parseInt(String.valueOf(old_matrix_d[md].charAt(2)));
-            old_matrix_data.set(md,temp);
-        }
     }
 
     public void initializeGame(Integer rows, Integer columns){
         Integer xi = extra_data.get(0), yi = extra_data.get(1);
-        Float speed = 1 + extra_data.get(2)*(1f/4f);
+        Float speed = 1f + extra_data.get(2);
         Entity entity, wall;
         
         aliens = new ArrayList<Entity>();
@@ -214,14 +201,17 @@ public class Game_Screen implements Screen{
                 }else switch(matrix_data.get(c+(columns*r))[0]){
                     case 1:
                         entity = new Squid("squid.png",(xi+(36f*c)),(yi-(30f*r)),36f,30f,speed);
+                        entity.setType(1);
                         System.out.println("A squid was added.");
                         break;
                     case 2:
                         entity = new Crab("crab.png",(xi+(36f*c)),(yi-(30f*r)),36f,30f,speed);
+                        entity.setType(2);
                         System.out.println("A crab was added.");
                         break;
                     case 3:
                         entity = new Octopus("octopus.png",(xi+(36f*c)),(yi-(30f*r)),36f,30f,speed);
+                        entity.setType(3);
                         System.out.println("An octopus was added.");
                         break;
                     default:
@@ -301,11 +291,12 @@ public class Game_Screen implements Screen{
         
         for (Integer e = 0; e < aliens.size(); e++) {
             entity = aliens.get(e);
-            if(old_matrix_data.get(entity.getID())[0] != matrix_data.get(entity.getID())[0]){
+            if(matrix_data.get(entity.getID())[0] != entity.getType()){
                 switch (matrix_data.get(entity.getID())[0]){
                     case 1:
                         new_entity = new Squid("squid.png",entity.getX(),entity.getY(),36f,30f,entity.speed);
                         new_entity.setID(entity.getID());
+                        new_entity.setType(1);
                         System.out.println("A squid was added.");
                         aliens.add(new_entity);
                         aliens.remove(entity);
@@ -313,6 +304,7 @@ public class Game_Screen implements Screen{
                     case 2:
                         new_entity = new Crab("crab.png",entity.getX(),entity.getY(),36f,30f,entity.speed);
                         new_entity.setID(entity.getID());
+                        new_entity.setType(2);
                         System.out.println("A crab was added.");
                         aliens.add(new_entity);
                         aliens.remove(entity);
@@ -320,6 +312,7 @@ public class Game_Screen implements Screen{
                     case 3:
                         new_entity = new Octopus("octopus.png",entity.getX(),entity.getY(),36f,30f,entity.speed);
                         new_entity.setID(entity.getID());
+                        new_entity.setType(3);
                         System.out.println("An octopus was added.");
                         aliens.add(new_entity);
                         aliens.remove(entity);
@@ -329,7 +322,7 @@ public class Game_Screen implements Screen{
                     default:
                         break;
                 }
-                old_matrix_data.get(entity.getID())[0] = matrix_data.get(entity.getID())[0];
+                matrix_data.get(entity.getID())[0] =  entity.getType();
             }
             
             if(entity.getY() <= 30){
@@ -366,11 +359,11 @@ public class Game_Screen implements Screen{
             
         }
         if(down){
-            extra_data.set(1, extra_data.get(1)+1);
+            extra_data.set(1, extra_data.get(1)-extra_data.get(2));
         }else if(back){
-            extra_data.set(0, extra_data.get(0)-1);
+            extra_data.set(0, extra_data.get(0)-extra_data.get(2));
         }else{
-            extra_data.set(0, extra_data.get(0)+1);
+            extra_data.set(0, extra_data.get(0)+extra_data.get(2));
         }
         if(!aliens.isEmpty()){
             if(down_distance<=aliens.get(0).getHeight()){
@@ -382,6 +375,7 @@ public class Game_Screen implements Screen{
         }else{
             if(player.getLife()<3){
                 player.lifeUp();
+                extra_data.set(7, player.getLife());
             }
             resetMatrix();
             initializeData();
@@ -396,7 +390,7 @@ public class Game_Screen implements Screen{
             + "3 0/3 0/3 0/3 0/3 0/3 0/3 0/3 0/3 0/3 0/"
             + "2 0/2 0/2 0/2 0/2 0/2 0/2 0/2 0/2 0/2 0/"
             + "1 0/1 0/1 0/1 0/1 0/1 0/1 0/1 0/1 0/1 0,"
-            + "20,550,1,"
+            + "20,550,0,"
             + "270,5,0,0,3,"
             + "1111111111111111111111111111111111111111111111111111111111111111111111"
             + "1111111111111111111111111111111111111111111111111111111111111111111111"

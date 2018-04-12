@@ -30,7 +30,7 @@ public class Spectator_Screen implements Screen{
     private ArrayList<Integer[]> matrix_data;
     private ArrayList<Integer> extra_data;
     private ArrayList<Integer> walls_data;
-    private Boolean back = false, down = false,connected = false, game_over = false;
+    private Boolean back = false, down = false,connected = false, game_over = false, linked = false;
     private Integer down_distance = 0;
     private Client client;
     private BitmapFont font;
@@ -43,11 +43,10 @@ public class Spectator_Screen implements Screen{
         batch = new SpriteBatch();
         logo = new Sprite(new Texture("logo.png"));
         limit = new Sprite(new Texture("limit.png"));
-        player = new Player("player.png",270f,20f,40f,25f,extra_data.get(4)+0f);
+        player = new Player("player.png",270f,20f,40f,25f,5f);
         font = new BitmapFont();
         alien_shoot = new Random();
 
-        initializeGame(5,10);
         limit.setBounds(0, 0, 600, 600);
         connected = client.connect();
         if(connected == true){
@@ -56,10 +55,9 @@ public class Spectator_Screen implements Screen{
     }
    @Override
     public void render (float  delta) {
-        
         Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-        
+        ////////////////////////////////////
         if(!connected){
             batch.begin();
             logo.setBounds((Gdx.graphics.getWidth()/2)-100, (Gdx.graphics.getHeight()/2), 200, 70);
@@ -71,31 +69,61 @@ public class Spectator_Screen implements Screen{
                 new Thread(client).start();
             }
         }else{
-            if(!game_over){   
+            if(client.recieve() != null){
+                matrix = client.recieve();
+                if(!linked){
+                    initializeData();
+                    initializeGame(5,10);
+                    player.setLife(extra_data.get(7));
+                    linked = true;
+                }
+                if(matrix.length() >= 400){
+                    updateData();
+                }
+                player.setLife(extra_data.get(7));
+                player.setPosition(extra_data.get(3), 20);
+                player.setScore(extra_data.get(5));
+                if(extra_data.get(6) == 1){
+                    player.shoot();
+                }
                 batch.begin();
-                logo.setBounds(10, Gdx.graphics.getHeight()-80, 200, 70);
+                logo.setBounds(10, Gdx.graphics.getHeight() - 80, 200, 70);
                 logo.draw(batch);
                 limit.draw(batch);
                 player.draw(batch);
-                drawAlienMatrix(batch);
+                //drawAlienMatrix(batch);
                 updateBunkers(batch);
                 font.draw(batch, "SCORE: " + player.getScore(), Gdx.graphics.getWidth()-100, Gdx.graphics.getHeight()-50);
                 batch.end();
-                ////////////////////////////////////
-                if(client.recieve() != null){
-                   matrix = client.recieve();
-                   if(matrix.length() >= 500){
-                   }
-                }
-                System.out.println("The new data is: "+ matrix);
-                ////////////////////////////////////
             }else{
                 batch.begin();
                 logo.setBounds((Gdx.graphics.getWidth()/2)-100, (Gdx.graphics.getHeight()/2), 200, 70);
-                font.draw(batch, "Game over, press R key to restart the game...", (Gdx.graphics.getWidth()/2)-135, (Gdx.graphics.getHeight()/2)-10);
+                font.draw(batch, "Waiting a game to spectate...", (Gdx.graphics.getWidth()/2)-90, (Gdx.graphics.getHeight()/2)-10);
                 logo.draw(batch);
                 batch.end();
             }
+            System.out.println("The new data is: " + matrix);
+        }
+        ////////////////////////////////////
+    }
+    
+    public void updateData(){
+        String[] data = matrix.split(",");
+        String[] matrix_d = data[0].split("/");
+
+        for(Integer md = 0; md < matrix_d.length; md++) {
+            Integer[] temp = new Integer[2];
+            temp[0] = Integer.parseInt(String.valueOf(matrix_d[md].charAt(0)));
+            temp[1] = Integer.parseInt(String.valueOf(matrix_d[md].charAt(2)));
+            matrix_data.set(md,temp);
+        }
+        
+        for(Integer e = 1; e < data.length-1; e++) {
+            extra_data.set(e-1, Integer.parseInt(data[e]));
+        }
+
+        for (Integer s = 0; s < 280; s++) {
+            walls_data.set(s, Integer.parseInt(String.valueOf(data[data.length-1].charAt(s))));
         }
     }
 
@@ -171,14 +199,17 @@ public class Spectator_Screen implements Screen{
                 }else switch(matrix_data.get(c+(columns*r))[0]){
                     case 1:
                         entity = new Squid("squid.png",(xi+(36f*c)),(yi-(30f*r)),36f,30f,speed);
+                        entity.setType(1);
                         System.out.println("A squid was added.");
                         break;
                     case 2:
                         entity = new Crab("crab.png",(xi+(36f*c)),(yi-(30f*r)),36f,30f,speed);
+                        entity.setType(2);
                         System.out.println("A crab was added.");
                         break;
                     case 3:
                         entity = new Octopus("octopus.png",(xi+(36f*c)),(yi-(30f*r)),36f,30f,speed);
+                        entity.setType(3);
                         System.out.println("An octopus was added.");
                         break;
                     default:
@@ -205,9 +236,13 @@ public class Spectator_Screen implements Screen{
     
     public void updateBunkers(SpriteBatch spriteBatch){
         Entity alien, wall;
+        
         for (Integer w = 0; w < walls.size(); w++) {
             wall = walls.get(w);
             wall.draw(spriteBatch);
+            if(walls_data.get(wall.getID()) == 0){
+                walls.remove(wall);
+            }
             for (Integer b = 0; b < player.getBullets().size(); b++) {
                 if(wall.collision(player.getBullets().get(b))){
                     walls.remove(wall);
@@ -236,48 +271,77 @@ public class Spectator_Screen implements Screen{
     }
 
     public void drawAlienMatrix(SpriteBatch spriteBatch){
-        Entity entity;
+        Entity entity, new_entity;
+        
         for (Integer e = 0; e < aliens.size(); e++) {
             entity = aliens.get(e);
-            if(entity.getY() <= 30){
-                game_over = true;
-            }
-            if(entity != null){
-                entity.draw(spriteBatch);
-                moveAlien(entity);
-                if(alien_shoot.nextInt(5000) == 2500){
-                    entity.shoot();
-                    matrix_data.get(entity.getID())[1] = 1;
-                }else{
-                    matrix_data.get(entity.getID())[1] = 0;
-                }
-                for (Integer b = 0; b < player.getBullets().size(); b++) {
-                    if(entity.collision(player.getBullets().get(b))){
+            
+            if(matrix_data.get(entity.getID())[0] != entity.getType()){
+                switch (matrix_data.get(entity.getID())[0]){
+                    case 1:
+                        new_entity = new Squid("squid.png",entity.getX(),entity.getY(),36f,30f,entity.speed);
+                        new_entity.setID(entity.getID());
+                        new_entity.setType(1);
+                        System.out.println("A squid was added.");
+                        aliens.add(new_entity);
                         aliens.remove(entity);
-                        player.setScore(player.getScore() + entity.getScore());
-                        player.destroyBullet(player.getBullets().get(b));
-                        matrix_data.get(entity.getID())[0] = 0;
-                        extra_data.set(5, player.getScore());
-                    }
+                        break;
+                    case 2:
+                        new_entity = new Crab("crab.png",entity.getX(),entity.getY(),36f,30f,entity.speed);
+                        new_entity.setID(entity.getID());
+                        new_entity.setType(2);
+                        System.out.println("A crab was added.");
+                        aliens.add(new_entity);
+                        aliens.remove(entity);
+                        break;
+                    case 3:
+                        new_entity = new Octopus("octopus.png",entity.getX(),entity.getY(),36f,30f,entity.speed);
+                        new_entity.setID(entity.getID());
+                        new_entity.setType(3);
+                        System.out.println("An octopus was added.");
+                        aliens.add(new_entity);
+                        aliens.remove(entity);
+                        break;
+                    case 0:
+                        aliens.remove(entity);
+                    default:
+                        break;
                 }
-                for (Integer b = 0; b < entity.getBullets().size(); b++) {
-                    if(player.collision(entity.getBullets().get(b))){
-                        entity.destroyBullet(entity.getBullets().get(b));
-                        player.lifeDown();
-                        extra_data.set(7, player.getLife());
-                        if(player.getLife() <= 0){
-                            game_over = true;
-                        }
+                matrix_data.get(entity.getID())[0] =  entity.getType();
+            }
+            
+            entity.draw(spriteBatch);
+            moveAlien(entity);
+            
+            if(matrix_data.get(e)[1] == 1){
+                entity.shoot();
+            }
+            for (Integer b = 0; b < player.getBullets().size(); b++) {
+                if(entity.collision(player.getBullets().get(b))){
+                    aliens.remove(entity);
+                    player.setScore(player.getScore() + entity.getScore());
+                    player.destroyBullet(player.getBullets().get(b));
+                    matrix_data.get(entity.getID())[0] = 0;
+                    extra_data.set(5, player.getScore());
+                }
+            }
+            for (Integer b = 0; b < entity.getBullets().size(); b++) {
+                if(player.collision(entity.getBullets().get(b))){
+                    entity.destroyBullet(entity.getBullets().get(b));
+                    player.lifeDown();
+                    extra_data.set(7, player.getLife());
+                    if(player.getLife() <= 0){
+                        game_over = true;
                     }
                 }
             }
         }
         if(down){
-            extra_data.set(1, extra_data.get(1)+1);
+            extra_data.set(1, extra_data.get(1)+extra_data.get(2));
         }else if(back){
-            extra_data.set(0, extra_data.get(0)-1);
+            extra_data.set(0, extra_data.get(0)-extra_data.get(2));
         }else{
-            extra_data.set(0, extra_data.get(0)+1);
+            extra_data.set(0, extra_data.get(0)+extra_data.get(2));
         }
         if(!aliens.isEmpty()){
             if(down_distance<=aliens.get(0).getHeight()){
@@ -286,12 +350,6 @@ public class Spectator_Screen implements Screen{
                down = false;
                down_distance = 0;
             }
-        }else{
-            if(player.getLife()<3){
-                player.lifeUp();
-            }
-            initializeData();
-            initializeGame(5,10);
         }
     }
     
