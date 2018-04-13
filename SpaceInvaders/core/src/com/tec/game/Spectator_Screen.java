@@ -27,7 +27,8 @@ public class Spectator_Screen implements Screen{
     private Player player;
     private Sprite logo, limit;
     private ArrayList<Entity> aliens, walls;
-    private ArrayList<Integer[]> matrix_data;
+    private ArrayList<Integer[]> aliens_data;
+    private ArrayList<Integer> old_aliens_data, old_walls_data;
     private ArrayList<Integer> extra_data;
     private ArrayList<Integer> walls_data;
     private Boolean back = false, down = false,connected = false, game_over = false, linked = false;
@@ -35,7 +36,7 @@ public class Spectator_Screen implements Screen{
     private Client client;
     private BitmapFont font;
     private Random alien_shoot;
-    private String matrix, old_matrix;
+    private String matrix;
 
     @Override
     public void show(){
@@ -70,31 +71,35 @@ public class Spectator_Screen implements Screen{
             }
         }else{
             if(client.recieve() != null){
-                matrix = client.recieve();
                 if(!linked){
+                    matrix = client.recieve();
                     initializeData();
                     initializeGame(5,10);
                     player.setLife(extra_data.get(7));
                     linked = true;
+                }else{
+                    if(client.recieve().split(",")[0].length() == 199){
+                        updateOldData();
+                        matrix = client.recieve();
+                        updateData();
+                        System.out.println("The new data is: " + client.recieve());
+                    }
+                    player.setLife(extra_data.get(7));
+                    player.setPosition(extra_data.get(3), 20);
+                    player.setScore(extra_data.get(5));
+                    if(extra_data.get(6) == 1){
+                        player.shoot();
+                    }
+                    batch.begin();
+                    logo.setBounds(10, Gdx.graphics.getHeight() - 80, 200, 70);
+                    logo.draw(batch);
+                    limit.draw(batch);
+                    player.draw(batch);
+                    //drawAlienMatrix(batch);
+                    updateBunkers(batch);
+                    font.draw(batch, "SCORE: " + player.getScore(), Gdx.graphics.getWidth()-100, Gdx.graphics.getHeight()-50);
+                    batch.end();
                 }
-                if(matrix.length() >= 400){
-                    updateData();
-                }
-                player.setLife(extra_data.get(7));
-                player.setPosition(extra_data.get(3), 20);
-                player.setScore(extra_data.get(5));
-                if(extra_data.get(6) == 1){
-                    player.shoot();
-                }
-                batch.begin();
-                logo.setBounds(10, Gdx.graphics.getHeight() - 80, 200, 70);
-                logo.draw(batch);
-                limit.draw(batch);
-                player.draw(batch);
-                //drawAlienMatrix(batch);
-                updateBunkers(batch);
-                font.draw(batch, "SCORE: " + player.getScore(), Gdx.graphics.getWidth()-100, Gdx.graphics.getHeight()-50);
-                batch.end();
             }else{
                 batch.begin();
                 logo.setBounds((Gdx.graphics.getWidth()/2)-100, (Gdx.graphics.getHeight()/2), 200, 70);
@@ -102,7 +107,6 @@ public class Spectator_Screen implements Screen{
                 logo.draw(batch);
                 batch.end();
             }
-            System.out.println("The new data is: " + matrix);
         }
         ////////////////////////////////////
     }
@@ -115,7 +119,7 @@ public class Spectator_Screen implements Screen{
             Integer[] temp = new Integer[2];
             temp[0] = Integer.parseInt(String.valueOf(matrix_d[md].charAt(0)));
             temp[1] = Integer.parseInt(String.valueOf(matrix_d[md].charAt(2)));
-            matrix_data.set(md,temp);
+            aliens_data.set(md,temp);
         }
         
         for(Integer e = 1; e < data.length-1; e++) {
@@ -135,20 +139,37 @@ public class Spectator_Screen implements Screen{
         }
         return temp_list;
     }
+    
+    public void updateOldData(){
+        String[] data = matrix.split(",");
+        String[] matrix_d = data[0].split("/");
+        
+        for(Integer md = 0; md < matrix_d.length; md++) {
+            old_aliens_data.add(Integer.parseInt(String.valueOf(matrix_d[md].charAt(0))));
+        }
+        for (int s = 0; s < 280; s++) {
+            old_walls_data.add(Integer.parseInt(String.valueOf(data[data.length-1].charAt(s))));
+        }
+    }
 
     public void initializeData(){
-        matrix_data = new ArrayList<Integer[]>();
+        aliens_data = new ArrayList<Integer[]>();
         extra_data = new ArrayList<Integer>();
         walls_data =  new ArrayList<Integer>();
+        old_aliens_data = new ArrayList<Integer>();
+        old_walls_data = new ArrayList<Integer>();
+       
 
         String[] data = matrix.split(",");
         String[] matrix_d = data[0].split("/");
+        
 
         for(Integer md = 0; md < matrix_d.length; md++) {
             Integer[] temp = new Integer[2];
             temp[0] = Integer.parseInt(String.valueOf(matrix_d[md].charAt(0)));
             temp[1] = Integer.parseInt(String.valueOf(matrix_d[md].charAt(2)));
-            matrix_data.add(temp);
+            aliens_data.add(temp);
+            old_aliens_data.add(temp[0]);
         }
 
         for(Integer e = 1; e < data.length-1; e++) {
@@ -157,6 +178,7 @@ public class Spectator_Screen implements Screen{
 
         for (int s = 0; s < 280; s++) {
             walls_data.add(Integer.parseInt(String.valueOf(data[data.length-1].charAt(s))));
+            old_walls_data.add(Integer.parseInt(String.valueOf(data[data.length-1].charAt(s))));
         }
     }
     
@@ -165,7 +187,7 @@ public class Spectator_Screen implements Screen{
         Float speed = 1 + extra_data.get(2)*(1f/4f);
         Entity entity;
         
-        switch(matrix_data.get((columns+10)*rows)[0]){
+        switch(aliens_data.get((columns+10)*rows)[0]){
             case 1:
                 entity = new Squid("squid.png",(xi+(36f*columns)),(yi-(30f*rows)),36f,30f,speed);
                 entity.setID((columns+10)*rows);
@@ -185,6 +207,21 @@ public class Spectator_Screen implements Screen{
                 return null;
         }
     }
+    
+    public void createWall(Integer id){
+        Entity wall;
+        for(Integer w = 0; w < 4; w++){
+            for(Integer r = 0; r < 7; r++){
+                for (Integer c = 0; c < 10; c++) {
+                    if(id == (70*w)+(10*r)+c){
+                        wall = new Bullet("bullet.png",45f + (150f*w) + (5f*c), 50f + (5f*r), 5f, 5f, 0f);
+                        wall.setID((70*w)+(10*r)+c);
+                        walls.add(wall);    
+                    }
+                }
+            } 
+        }
+    }
 
     public void initializeGame(Integer rows, Integer columns){
         Integer xi = extra_data.get(0), yi = extra_data.get(1);
@@ -193,10 +230,10 @@ public class Spectator_Screen implements Screen{
         
         aliens = new ArrayList<Entity>();
         for (Integer r = 0; r < rows; r++) {
-            for (Integer c = 0; c < columns & (c+(columns*r)) < matrix_data.size(); c++) {
-                if(null == matrix_data.get(c+(columns*r))[0]){
+            for (Integer c = 0; c < columns & (c+(columns*r)) < aliens_data.size(); c++) {
+                if(null == aliens_data.get(c+(columns*r))[0]){
                     continue;
-                }else switch(matrix_data.get(c+(columns*r))[0]){
+                }else switch(aliens_data.get(c+(columns*r))[0]){
                     case 1:
                         entity = new Squid("squid.png",(xi+(36f*c)),(yi-(30f*r)),36f,30f,speed);
                         entity.setType(1);
@@ -236,13 +273,25 @@ public class Spectator_Screen implements Screen{
     
     public void updateBunkers(SpriteBatch spriteBatch){
         Entity alien, wall;
-        
+        for (int wd = 0; wd < walls_data.size(); wd++){
+            if(walls_data.get(wd) != old_walls_data.get(wd)){
+                switch(walls_data.get(wd)){
+                    case 0:
+                        for(Integer w = 0; w < walls.size(); w++){
+                            if(walls.get(w).getID() == w){
+                                walls.remove(walls.get(w));
+                            }
+                        }
+                        break;
+                    case 1:
+                        createWall(wd);
+                        break;
+                }
+            }
+        }
         for (Integer w = 0; w < walls.size(); w++) {
             wall = walls.get(w);
             wall.draw(spriteBatch);
-            if(walls_data.get(wall.getID()) == 0){
-                walls.remove(wall);
-            }
             for (Integer b = 0; b < player.getBullets().size(); b++) {
                 if(wall.collision(player.getBullets().get(b))){
                     walls.remove(wall);
@@ -255,7 +304,7 @@ public class Spectator_Screen implements Screen{
                 if(wall.collision(alien)){
                     aliens.remove(alien);
                     walls.remove(wall);
-                    matrix_data.get(alien.getID())[0] = 0;
+                    aliens_data.get(alien.getID())[0] = 0;
                     walls_data.set(wall.getID(), 0);
                 }else{
                     for (Integer b = 0; b < alien.getBullets().size(); b++) {
@@ -276,8 +325,8 @@ public class Spectator_Screen implements Screen{
         for (Integer e = 0; e < aliens.size(); e++) {
             entity = aliens.get(e);
             
-            if(matrix_data.get(entity.getID())[0] != entity.getType()){
-                switch (matrix_data.get(entity.getID())[0]){
+            if(aliens_data.get(entity.getID())[0] != entity.getType()){
+                switch (aliens_data.get(entity.getID())[0]){
                     case 1:
                         new_entity = new Squid("squid.png",entity.getX(),entity.getY(),36f,30f,entity.speed);
                         new_entity.setID(entity.getID());
@@ -307,13 +356,13 @@ public class Spectator_Screen implements Screen{
                     default:
                         break;
                 }
-                matrix_data.get(entity.getID())[0] =  entity.getType();
+                aliens_data.get(entity.getID())[0] =  entity.getType();
             }
             
             entity.draw(spriteBatch);
             moveAlien(entity);
             
-            if(matrix_data.get(e)[1] == 1){
+            if(aliens_data.get(e)[1] == 1){
                 entity.shoot();
             }
             for (Integer b = 0; b < player.getBullets().size(); b++) {
@@ -321,7 +370,7 @@ public class Spectator_Screen implements Screen{
                     aliens.remove(entity);
                     player.setScore(player.getScore() + entity.getScore());
                     player.destroyBullet(player.getBullets().get(b));
-                    matrix_data.get(entity.getID())[0] = 0;
+                    aliens_data.get(entity.getID())[0] = 0;
                     extra_data.set(5, player.getScore());
                 }
             }
@@ -376,9 +425,7 @@ public class Spectator_Screen implements Screen{
         batch.dispose();
         try {
             client.stop();
-        } catch (IOException ex) {
-            Logger.getLogger(Game_Screen.class.getName()).log(Level.SEVERE, null, ex);
-        }
+        } catch (IOException ex) {}
     }
   
     @Override

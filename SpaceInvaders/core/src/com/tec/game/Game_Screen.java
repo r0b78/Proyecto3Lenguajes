@@ -39,8 +39,7 @@ public class Game_Screen implements Screen{
             + "1111111111111111111111111111111111111111111111111111111111111111111111"
             + "1111111111111111111111111111111111111111111111111111111111111111111111"
             + "1111111111111111111111111111111111111111111111111111111111111111111111"
-            + "1111111111111111111111111111111111111111111111111111111111111111111111",
-            old_matrix = "";
+            + "1111111111111111111111111111111111111111111111111111111111111111111111";
     ////matrz , Xposmatriz, Yposmatriz,Velmatriz,Xjug,Vjug,Puntaje,diparojug,murods
     ///bicho disparo/
 
@@ -63,6 +62,7 @@ public class Game_Screen implements Screen{
             new Thread(client).start();
         }
     }
+    int cont=0;
     @Override
     public void render (float  delta) {
         
@@ -93,15 +93,15 @@ public class Game_Screen implements Screen{
                 batch.end();
                 ////////////////////////////////////
                 try {
-                    old_matrix = createDataFromInformation();
-                    client.send(old_matrix);
+                    client.send(createDataFromInformation());
+                    System.out.println("The client sends: " + createDataFromInformation());
                     if(client.recieve() != null){
-                       matrix = client.recieve();
-                       if(matrix.length() >= 501){
-                            updateData();
+                       if(client.recieve().split(",")[0].length() == 199 & createDataFromInformation() == client.recieve()){
+                           matrix = client.recieve();
+                           System.out.println("The server sends: "+ client.recieve());
+                           updateData();
                        }
                     }
-                    System.out.println("The new data is: "+ matrix);
                 } catch (IOException ex) {
                     Logger.getLogger(Game_Screen.class.getName()).log(Level.SEVERE, null, ex);
                 }
@@ -178,7 +178,6 @@ public class Game_Screen implements Screen{
     public void updateData(){
         String[] data = matrix.split(",");
         String[] matrix_d = data[0].split("/");
-        System.out.println(matrix_d.length);
 
         for(Integer md = 0; md < matrix_d.length; md++) {
             Integer[] temp = new Integer[2];
@@ -218,6 +217,7 @@ public class Game_Screen implements Screen{
                         continue;
                 }
                 entity.setID((columns*r)+c);
+                System.out.println("The id is: " + Integer.toString(entity.getID()));
                 aliens.add(entity);
             }
         }
@@ -291,6 +291,7 @@ public class Game_Screen implements Screen{
         
         for (Integer e = 0; e < aliens.size(); e++) {
             entity = aliens.get(e);
+            /*
             if(matrix_data.get(entity.getID())[0] != entity.getType()){
                 switch (matrix_data.get(entity.getID())[0]){
                     case 1:
@@ -324,7 +325,7 @@ public class Game_Screen implements Screen{
                 }
                 matrix_data.get(entity.getID())[0] =  entity.getType();
             }
-            
+            */
             if(entity.getY() <= 30){
                 game_over = true;
             }
