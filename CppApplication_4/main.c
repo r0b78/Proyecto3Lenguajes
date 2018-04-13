@@ -104,7 +104,7 @@ int matrizAString(struct Node* lista1,struct Node* lista2,char** stringSalida);
 int armarEstructura(char* s,char*** arr,int lenArr);
 int set(int n,struct Node** listaa,int newData);
 int addPersonaje(struct Node** head,int x,int y,int tipo);
-
+int generarJugadores(struct Node** listaa,struct Node** listaPoss,int n);
 //Funcion Principal del server
 int main(int argc, char *argv[])
 
@@ -738,5 +738,26 @@ int set(int n,struct Node** listaa,int newData){
     
     
     return 100000;
+}
+int generarJugadores(struct Node** listaa,struct Node** listaPoss,int n){
+    
+    struct Node* lista=*listaa;
+    struct Node* listaPos=*listaPoss;
+    
+    lista=crearLista();
+    listaPos=crearLista();
+    
+    int N=3;
+    int M=1;
+    int numero = rand () % (N-M+1) + M;
+    for(int i=0;i<n;i++){
+        numero=rand () % (N-M+1) + M;
+        push(&lista,numero);
+        push(&listaPos,0);
+        printf("sdfs\n");
+    }
+   // printList(lista);
+    *listaa=lista;
+    *listaPoss=listaPos;
 }
 
