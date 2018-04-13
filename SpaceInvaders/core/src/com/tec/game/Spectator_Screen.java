@@ -79,7 +79,6 @@ public class Spectator_Screen implements Screen{
                     linked = true;
                 }else{
                     if(client.recieve().split(",")[0].length() == 199){
-                        updateOldData();
                         matrix = client.recieve();
                         updateData();
                         System.out.println("The new data is: " + client.recieve());
@@ -169,7 +168,6 @@ public class Spectator_Screen implements Screen{
             temp[0] = Integer.parseInt(String.valueOf(matrix_d[md].charAt(0)));
             temp[1] = Integer.parseInt(String.valueOf(matrix_d[md].charAt(2)));
             aliens_data.add(temp);
-            old_aliens_data.add(temp[0]);
         }
 
         for(Integer e = 1; e < data.length-1; e++) {
@@ -178,7 +176,6 @@ public class Spectator_Screen implements Screen{
 
         for (int s = 0; s < 280; s++) {
             walls_data.add(Integer.parseInt(String.valueOf(data[data.length-1].charAt(s))));
-            old_walls_data.add(Integer.parseInt(String.valueOf(data[data.length-1].charAt(s))));
         }
     }
     
@@ -271,51 +268,54 @@ public class Spectator_Screen implements Screen{
         }
     }
     
+    public Boolean checkIfExist(Integer id, ArrayList<Entity> list){
+        for (Entity entity: list) {
+            if(entity.getID() == id){
+                System.out.println("The id "+id+" is diferent to "+entity.getID());
+                return true;
+            }
+        }
+        return false;
+    }
+    
     public void updateBunkers(SpriteBatch spriteBatch){
         Entity alien, wall;
         for (int wd = 0; wd < walls_data.size(); wd++){
-            if(walls_data.get(wd) != old_walls_data.get(wd)){
-                switch(walls_data.get(wd)){
-                    case 0:
-                        for(Integer w = 0; w < walls.size(); w++){
-                            if(walls.get(w).getID() == w){
-                                walls.remove(walls.get(w));
-                            }
-                        }
-                        break;
-                    case 1:
-                        createWall(wd);
-                        break;
+            if(walls_data.get(wd) == 1){
+                if(!checkIfExist(wd, walls)){
+                    System.err.println("El muro "+Integer.toString(wd)+" no existe.");
+                    createWall(wd);
                 }
             }
         }
         for (Integer w = 0; w < walls.size(); w++) {
             wall = walls.get(w);
             wall.draw(spriteBatch);
-            for (Integer b = 0; b < player.getBullets().size(); b++) {
-                if(wall.collision(player.getBullets().get(b))){
-                    walls.remove(wall);
-                    player.destroyBullet(player.getBullets().get(b));
-                    walls_data.set(wall.getID(), 0);
-                }
-            }
-            for (Integer e = 0; e < aliens.size(); e++) {
-                alien = aliens.get(e);
-                if(wall.collision(alien)){
-                    aliens.remove(alien);
-                    walls.remove(wall);
-                    aliens_data.get(alien.getID())[0] = 0;
-                    walls_data.set(wall.getID(), 0);
-                }else{
-                    for (Integer b = 0; b < alien.getBullets().size(); b++) {
-                        if(wall.collision(alien.getBullets().get(b))){
-                            alien.destroyBullet(alien.getBullets().get(b));
-                            walls.remove(wall);
-                            walls_data.set(wall.getID(), 0);
-                        }
+            if(walls_data.get(wall.getID()) == 0){
+                walls.remove(wall);
+            }else{
+                for (Integer b = 0; b < player.getBullets().size(); b++) {
+                    if(wall.collision(player.getBullets().get(b))){
+                        player.destroyBullet(player.getBullets().get(b));
+                        walls_data.set(wall.getID(), 0);
                     }
-                }   
-            } 
+                }
+                for (Integer e = 0; e < aliens.size(); e++) {
+                    alien = aliens.get(e);
+                    if(wall.collision(alien)){
+                        aliens.remove(alien);
+                        aliens_data.get(alien.getID())[0] = 0;
+                        walls_data.set(wall.getID(), 0);
+                    }else{
+                        for (Integer b = 0; b < alien.getBullets().size(); b++) {
+                            if(wall.collision(alien.getBullets().get(b))){
+                                alien.destroyBullet(alien.getBullets().get(b));
+                                walls_data.set(wall.getID(), 0);
+                            }
+                        }
+                    }   
+                } 
+            }
         }
     }
 

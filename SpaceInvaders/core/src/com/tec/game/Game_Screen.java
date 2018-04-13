@@ -94,15 +94,18 @@ public class Game_Screen implements Screen{
                 ////////////////////////////////////
                 try {
                     client.send(createDataFromInformation());
-                    System.out.println("The client sends: " + createDataFromInformation());
+                    System.out.println("The client sends: "+createDataFromInformation());
+                    Thread.sleep(2);
                     if(client.recieve() != null){
-                       if(client.recieve().split(",")[0].length() == 199 & createDataFromInformation() == client.recieve()){
+                       if(client.recieve().split(",")[0].length() == 199){
                            matrix = client.recieve();
                            System.out.println("The server sends: "+ client.recieve());
                            updateData();
                        }
                     }
                 } catch (IOException ex) {
+                    Logger.getLogger(Game_Screen.class.getName()).log(Level.SEVERE, null, ex);
+                } catch (InterruptedException ex) {
                     Logger.getLogger(Game_Screen.class.getName()).log(Level.SEVERE, null, ex);
                 }
                 ////////////////////////////////////
