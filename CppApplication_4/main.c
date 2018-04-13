@@ -84,8 +84,9 @@ int NaveNodriza=0;
 int xNave=0;
 int yNave=0;
 int cambio=0;
-
-
+int cambioVel=0;
+int velocidad=0;
+char* velString;
 
 ///////////////Metodos del Server
 void *accept_clients(void *args);
@@ -170,7 +171,7 @@ void *lineaComandos(void *args){
          pthread_mutex_lock (&lock);
          #endif
 
-            char * comp=strSpli[0];
+         char * comp=strSpli[0];
           //  comp[strlen(comp)-1]=0;
             
         if (strcmp(comp,"add")==0){
@@ -191,15 +192,31 @@ void *lineaComandos(void *args){
                 printList(listaPersonaje);
                 cambio=1;
             }
+            
         }
         if (strcmp(comp,"del")==0){
-            if(c>=3){
+            if(c>2){
                  printf("ent2ro %d\n",c);
                 int x=atoi(strSpli[1]);
                 int y=atoi(strSpli[2]);
+                printf("Esto\n");
+                printList(listaPersonaje);
                 addPersonaje(&listaPersonaje,x,y,0);
-                 printList(listaPersonaje);
+                printList(listaPersonaje);
                  cambio=1;
+            }
+            
+        }
+        if (strcmp(comp,"vel")==0){
+            if(c>=1){
+                 printf("ent2ro %d\n",c);
+                int x=atoi(strSpli[1]);
+                velocidad=x;
+                  printf("ent2ro %d\n",velocidad);
+                  
+                
+                 cambio=1;
+                 cambioVel=1;
             }
             
         }
@@ -266,10 +283,11 @@ void *service_single_client(void *args) {
         // printf("LennSpli:%d\n",splitLen);
          
          char* s=spliit[0];
-         for(int i=0;i<splitLen;i++){
-           //  printf("Spliita:%s \n",spliit[i]);
+         char** nuevoS;
+         int nue=split(s,'/',&nuevoS);
          
-         }
+         
+         printf("Esto wey :%d \n",nue);
                     
          ///////////////
          if(splitLen>0){
@@ -293,10 +311,23 @@ void *service_single_client(void *args) {
                         parsearStringMatirz(&listaPersonaje,&lista2Disparo,s);
                     }
                     if(cambio==1){
-                        if(cont>50){
+                        if(cambioVel==1){
+                            printf("Esto aca\n");
+                            char strrrr[30];
+                            memset(strrrr,0,strlen(strrrr));
+                            sprintf(strrrr,"%d",velocidad);
+                        //    spliit[3]=strrrr;
+                            cambio=0;
+                            cambioVel=0;
+                          printf("Esto aca %s\n",spliit[3]);
+                        
+                            //      printf("%s",spliit[3]);
+                        }
+                        if(cont>30){
                             cambio=0;
                             
                         }
+                        
                         cont++;
                     }
                     
@@ -625,9 +656,9 @@ int parsearStringMatirz(struct Node** headd,struct Node** head2,char* string){
     char** tmp;
     int lenSplit=split(string,'/',&tmp);
     
-   // printf("este es Len%d",lenSplit);
+    printf("este es Len%d\n",lenSplit);
     int lenInterno;
-    for(int i=0;i<lenSplit-1;i++){
+    for(int i=0;i<lenSplit;i++){
       //  printf("Este es el array: %s\n",tmp[i]);
         char**tmp2;
         lenInterno=split(tmp[i],' ',&tmp2);
@@ -654,22 +685,25 @@ int parsearStringMatirz(struct Node** headd,struct Node** head2,char* string){
 }
 
 int matrizAString(struct Node* lista1,struct Node* lista2,char** stringSalida){
+   
     
     memset(stringSalida,0,sizeof(stringSalida));
+    
+    printf("\nlen Lista %d \n",getLargo(lista1));
     for (int i=0;i<getLargo(lista1);i++){
-       // printf("LenListEssdfdfff: %dsdfsdfsdfsdf %d\n",i,get(i,lista1));
-        char buf[500];
+         printf("LenListEssdfdfff: %dsdfsdfsdfsdf %d\n",i,get(i,lista1));
+        char buf[400];
         memset(buf,0,sizeof(buf));
         sprintf(buf,"%d",get(i,lista1));
         strcat(stringSalida,buf);
         
         strcat(stringSalida," ");
-        char buf2[500];
+        char buf2[400];
         memset(buf2,0,sizeof(buf2));
         sprintf(buf2,"%d",get(i,lista2));
         strcat(stringSalida,buf2);
-        if(i!=getLargo(lista1)-1){
-        strcat(stringSalida,"/");
+        if(i!= getLargo(lista1)-1){
+            strcat(stringSalida,"/");
         }
         
       //  strcat(stringSalida,"f ");
@@ -679,7 +713,7 @@ int matrizAString(struct Node* lista1,struct Node* lista2,char** stringSalida){
         
     }
     
-    return stringSalida;
+    return 1;
     
 }
 int armarEstructura(char* s,char*** arr,int lenArr){
