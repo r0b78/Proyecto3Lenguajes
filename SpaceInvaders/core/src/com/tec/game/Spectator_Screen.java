@@ -19,8 +19,6 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Random;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class Spectator_Screen implements Screen{
     private SpriteBatch batch;
@@ -28,7 +26,6 @@ public class Spectator_Screen implements Screen{
     private Sprite logo, limit;
     private ArrayList<Entity> aliens, walls;
     private ArrayList<Integer[]> aliens_data;
-    private ArrayList<Integer> old_aliens_data, old_walls_data;
     private ArrayList<Integer> extra_data;
     private ArrayList<Integer> walls_data;
     private Boolean back = false, down = false,connected = false, game_over = false, linked = false;
@@ -94,7 +91,7 @@ public class Spectator_Screen implements Screen{
                     logo.draw(batch);
                     limit.draw(batch);
                     player.draw(batch);
-                    //drawAlienMatrix(batch);
+                    drawAlienMatrix(batch);
                     updateBunkers(batch);
                     font.draw(batch, "SCORE: " + player.getScore(), Gdx.graphics.getWidth()-100, Gdx.graphics.getHeight()-50);
                     batch.end();
@@ -138,31 +135,15 @@ public class Spectator_Screen implements Screen{
         }
         return temp_list;
     }
-    
-    public void updateOldData(){
-        String[] data = matrix.split(",");
-        String[] matrix_d = data[0].split("/");
-        
-        for(Integer md = 0; md < matrix_d.length; md++) {
-            old_aliens_data.add(Integer.parseInt(String.valueOf(matrix_d[md].charAt(0))));
-        }
-        for (int s = 0; s < 280; s++) {
-            old_walls_data.add(Integer.parseInt(String.valueOf(data[data.length-1].charAt(s))));
-        }
-    }
 
     public void initializeData(){
         aliens_data = new ArrayList<Integer[]>();
         extra_data = new ArrayList<Integer>();
         walls_data =  new ArrayList<Integer>();
-        old_aliens_data = new ArrayList<Integer>();
-        old_walls_data = new ArrayList<Integer>();
        
-
         String[] data = matrix.split(",");
         String[] matrix_d = data[0].split("/");
         
-
         for(Integer md = 0; md < matrix_d.length; md++) {
             Integer[] temp = new Integer[2];
             temp[0] = Integer.parseInt(String.valueOf(matrix_d[md].charAt(0)));
@@ -179,29 +160,43 @@ public class Spectator_Screen implements Screen{
         }
     }
     
-    public Entity createAlien(Integer rows, Integer columns){
-        Integer xi = extra_data.get(0), yi = extra_data.get(1);
-        Float speed = 1 + extra_data.get(2)*(1f/4f);
+    public void createAlien(Integer id){
+        Integer xi = extra_data.get(0), yi = extra_data.get(1), columns = 0, rows = 0;
         Entity entity;
         
-        switch(aliens_data.get((columns+10)*rows)[0]){
-            case 1:
-                entity = new Squid("squid.png",(xi+(36f*columns)),(yi-(30f*rows)),36f,30f,speed);
-                entity.setID((columns+10)*rows);
-                System.out.println("A squid was added.");
-                return entity;
-            case 2:
-                entity = new Crab("crab.png",(xi+(36f*columns)),(yi-(30f*rows)),36f,30f,speed);
-                entity.setID((columns+10)*rows);
-                System.out.println("A crab was added.");
-                return entity;
-            case 3:
-                entity = new Octopus("octopus.png",(xi+(36f*columns)),(yi-(30f*rows)),36f,30f,speed);
-                entity.setID((columns+10)*rows);
-                System.out.println("An octopus was added.");
-                return entity;
-            default:
-                return null;
+        for (Integer r = 0; r < 5; r++) {
+            for (Integer c = 0; c < 10 & (c+(10*r)) < aliens_data.size(); c++){
+                if(id.equals((10*r)+c)){
+                    switch(aliens_data.get(id)[0]){
+                        case 1:
+                            entity = new Squid("squid.png",(xi+(36f*c)),(yi-(30f*r)),36f,30f,0f);
+                            entity.setID((columns+10)*rows);
+                            entity.setColumn(c);
+                            entity.setRow(r);
+                            System.out.println("A squid was added.");
+                            aliens.add(entity);
+                            break;
+                        case 2:
+                            entity = new Crab("crab.png",(xi+(36f*c)),(yi-(30f*r)),36f,30f,0f);
+                            entity.setID((columns+10)*rows);
+                            entity.setColumn(c);
+                            entity.setRow(r);
+                            System.out.println("A crab was added.");
+                            aliens.add(entity);
+                            break;
+                        case 3:
+                            entity = new Octopus("octopus.png",(xi+(36f*c)),(yi-(30f*r)),36f,30f,0f);
+                            entity.setID((columns+10)*rows);
+                            entity.setColumn(c);
+                            entity.setRow(r);
+                            System.out.println("An octopus was added.");
+                            aliens.add(entity);
+                            break;
+                        default:
+                            break;
+                    }
+                }
+            }
         }
     }
     
@@ -222,7 +217,7 @@ public class Spectator_Screen implements Screen{
 
     public void initializeGame(Integer rows, Integer columns){
         Integer xi = extra_data.get(0), yi = extra_data.get(1);
-        Float speed = 1 + extra_data.get(2)*(1f/4f);
+        Float speed = extra_data.get(2) + 0f;
         Entity entity, wall;
         
         aliens = new ArrayList<Entity>();
@@ -249,6 +244,8 @@ public class Spectator_Screen implements Screen{
                     default:
                         continue;
                 }
+                entity.setColumn(c);
+                entity.setRow(r);
                 entity.setID((columns*r)+c);
                 aliens.add(entity);
             }
@@ -270,8 +267,7 @@ public class Spectator_Screen implements Screen{
     
     public Boolean checkIfExist(Integer id, ArrayList<Entity> list){
         for (Entity entity: list) {
-            if(entity.getID() == id){
-                System.out.println("The id "+id+" is diferent to "+entity.getID());
+            if(entity.getID().equals(id)){
                 return true;
             }
         }
@@ -283,7 +279,6 @@ public class Spectator_Screen implements Screen{
         for (int wd = 0; wd < walls_data.size(); wd++){
             if(walls_data.get(wd) == 1){
                 if(!checkIfExist(wd, walls)){
-                    System.err.println("El muro "+Integer.toString(wd)+" no existe.");
                     createWall(wd);
                 }
             }
@@ -318,19 +313,28 @@ public class Spectator_Screen implements Screen{
             }
         }
     }
-
+    
     public void drawAlienMatrix(SpriteBatch spriteBatch){
         Entity entity, new_entity;
         
+        for (int a = 0; a < aliens_data.size(); a++){
+            if(!checkIfExist(a, aliens) & aliens_data.get(a)[0] != 0 & aliens.size()<50){
+                System.out.println("The alien "+a+" does not exist");
+                createAlien(a);
+            }
+        }
+        
         for (Integer e = 0; e < aliens.size(); e++) {
             entity = aliens.get(e);
-            
-            if(aliens_data.get(entity.getID())[0] != entity.getType()){
+            entity.setPosition(extra_data.get(0)+entity.getColumn()*entity.getWidth().intValue(), extra_data.get(1)-entity.getRow()*entity.getHeight().intValue());
+            if(!aliens_data.get(entity.getID())[0].equals(entity.getType())){
                 switch (aliens_data.get(entity.getID())[0]){
                     case 1:
                         new_entity = new Squid("squid.png",entity.getX(),entity.getY(),36f,30f,entity.speed);
                         new_entity.setID(entity.getID());
                         new_entity.setType(1);
+                        new_entity.setColumn(entity.getColumn());
+                        new_entity.setRow(entity.getRow());
                         System.out.println("A squid was added.");
                         aliens.add(new_entity);
                         aliens.remove(entity);
@@ -339,6 +343,8 @@ public class Spectator_Screen implements Screen{
                         new_entity = new Crab("crab.png",entity.getX(),entity.getY(),36f,30f,entity.speed);
                         new_entity.setID(entity.getID());
                         new_entity.setType(2);
+                        new_entity.setColumn(entity.getColumn());
+                        new_entity.setRow(entity.getRow());
                         System.out.println("A crab was added.");
                         aliens.add(new_entity);
                         aliens.remove(entity);
@@ -347,6 +353,8 @@ public class Spectator_Screen implements Screen{
                         new_entity = new Octopus("octopus.png",entity.getX(),entity.getY(),36f,30f,entity.speed);
                         new_entity.setID(entity.getID());
                         new_entity.setType(3);
+                        new_entity.setColumn(entity.getColumn());
+                        new_entity.setRow(entity.getRow());
                         System.out.println("An octopus was added.");
                         aliens.add(new_entity);
                         aliens.remove(entity);
@@ -356,67 +364,24 @@ public class Spectator_Screen implements Screen{
                     default:
                         break;
                 }
-                aliens_data.get(entity.getID())[0] =  entity.getType();
             }
             
             entity.draw(spriteBatch);
-            moveAlien(entity);
             
             if(aliens_data.get(e)[1] == 1){
                 entity.shoot();
             }
+            
             for (Integer b = 0; b < player.getBullets().size(); b++) {
                 if(entity.collision(player.getBullets().get(b))){
-                    aliens.remove(entity);
-                    player.setScore(player.getScore() + entity.getScore());
                     player.destroyBullet(player.getBullets().get(b));
-                    aliens_data.get(entity.getID())[0] = 0;
-                    extra_data.set(5, player.getScore());
                 }
             }
             for (Integer b = 0; b < entity.getBullets().size(); b++) {
                 if(player.collision(entity.getBullets().get(b))){
                     entity.destroyBullet(entity.getBullets().get(b));
-                    player.lifeDown();
-                    extra_data.set(7, player.getLife());
-                    if(player.getLife() <= 0){
-                        game_over = true;
-                    }
                 }
             }
-        }
-        if(down){
-            extra_data.set(1, extra_data.get(1)+extra_data.get(2));
-        }else if(back){
-            extra_data.set(0, extra_data.get(0)-extra_data.get(2));
-        }else{
-            extra_data.set(0, extra_data.get(0)+extra_data.get(2));
-        }
-        if(!aliens.isEmpty()){
-            if(down_distance<=aliens.get(0).getHeight()){
-               down_distance++;
-            }else{
-               down = false;
-               down_distance = 0;
-            }
-        }
-    }
-    
-    public void moveAlien(Entity entity){
-        if(down){
-            entity.moveDown();
-        }else if(back){
-            entity.moveLeft();
-        }else{
-            entity.moveRight();
-        }
-        if(entity.getX()+entity.getWidth() >= Gdx.graphics.getWidth()- 20){
-            back = true;
-            down = true;
-        }
-        if(entity.getX() <= 20){
-            back = false;
-            down = true;
         }
     }
     

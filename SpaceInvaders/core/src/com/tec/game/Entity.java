@@ -18,7 +18,7 @@ public abstract class Entity {
     public ArrayList<Bullet> bullets;
     public Sprite sprite;
     public Float speed;
-    private Integer id_pos, score, type;
+    private Integer id_pos, score, type, column, row;
     
     public Entity(String src, Float x, Float y, Float  width, Float  height, Float  speed){
         sprite = new Sprite(new Texture(src));
@@ -79,9 +79,13 @@ public abstract class Entity {
     public ArrayList<Bullet> getBullets(){ return bullets; }
     public Integer getScore(){ return score; }
     public Integer getType(){ return type; }
+    public Integer getColumn(){ return column; }
+    public Integer getRow(){ return row; }
     
     public void setSpeed(Float speed){ this.speed = speed; }
     public void setScore(int score){ this.score = score; }
     public void setPosition(Integer x, Integer y){ sprite.setPosition(x, y); }
     public void setType(Integer type){ this.type = type; }
+    public void setColumn(Integer column){ this.column = column; }
+    public void setRow(Integer row){ this.row = row; }
 }

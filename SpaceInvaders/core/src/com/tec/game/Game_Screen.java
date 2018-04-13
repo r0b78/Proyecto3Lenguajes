@@ -34,7 +34,7 @@ public class Game_Screen implements Screen{
             + "3 0/3 0/3 0/3 0/3 0/3 0/3 0/3 0/3 0/3 0/"
             + "2 0/2 0/2 0/2 0/2 0/2 0/2 0/2 0/2 0/2 0/"
             + "1 0/1 0/1 0/1 0/1 0/1 0/1 0/1 0/1 0/1 0,"
-            + "20,550,0,"
+            + "20,550,1,"
             + "270,5,0,0,3,"
             + "1111111111111111111111111111111111111111111111111111111111111111111111"
             + "1111111111111111111111111111111111111111111111111111111111111111111111"
@@ -91,24 +91,24 @@ public class Game_Screen implements Screen{
                 updateBunkers(batch);
                 font.draw(batch, "SCORE: " + player.getScore(), Gdx.graphics.getWidth()-100, Gdx.graphics.getHeight()-50);
                 batch.end();
-                ////////////////////////////////////
+                /////////////////////////////////////////////////////////
                 try {
                     client.send(createDataFromInformation());
+                    Thread.sleep(5);
                     System.out.println("The client sends: "+createDataFromInformation());
-                    Thread.sleep(2);
                     if(client.recieve() != null){
-                       if(client.recieve().split(",")[0].length() == 199){
+                        if(client.recieve().split(",")[0].length() == 199){
                            matrix = client.recieve();
                            System.out.println("The server sends: "+ client.recieve());
                            updateData();
-                       }
+                        }
                     }
                 } catch (IOException ex) {
                     Logger.getLogger(Game_Screen.class.getName()).log(Level.SEVERE, null, ex);
                 } catch (InterruptedException ex) {
                     Logger.getLogger(Game_Screen.class.getName()).log(Level.SEVERE, null, ex);
                 }
-                ////////////////////////////////////
+                /////////////////////////////////////////////////////////
             }else{
                 batch.begin();
                 logo.setBounds((Gdx.graphics.getWidth()/2)-100, (Gdx.graphics.getHeight()/2), 200, 70);
@@ -192,7 +192,7 @@ public class Game_Screen implements Screen{
 
     public void initializeGame(Integer rows, Integer columns){
         Integer xi = extra_data.get(0), yi = extra_data.get(1);
-        Float speed = 1f + extra_data.get(2);
+        Float speed = extra_data.get(2) + 0f;
         Entity entity, wall;
         
         aliens = new ArrayList<Entity>();
@@ -219,8 +219,9 @@ public class Game_Screen implements Screen{
                     default:
                         continue;
                 }
+                entity.setColumn(c);
+                entity.setRow(r);
                 entity.setID((columns*r)+c);
-                System.out.println("The id is: " + Integer.toString(entity.getID()));
                 aliens.add(entity);
             }
         }
@@ -288,19 +289,30 @@ public class Game_Screen implements Screen{
             } 
         }
     }
-
+    
+    public Boolean checkIfExist(Integer id, ArrayList<Entity> list){
+        for (Entity entity: list) {
+            if(entity.getID().equals(id)){
+                return true;
+            }
+        }
+        return false;
+    }
+    
     public void drawAlienMatrix(SpriteBatch spriteBatch){
         Entity entity, new_entity;
         
         for (Integer e = 0; e < aliens.size(); e++) {
             entity = aliens.get(e);
-            /*
-            if(matrix_data.get(entity.getID())[0] != entity.getType()){
+            entity.setPosition(extra_data.get(0)+entity.getColumn()*entity.getWidth().intValue(), extra_data.get(1)-entity.getRow()*entity.getHeight().intValue());
+            if(!matrix_data.get(entity.getID())[0].equals(entity.getType())){
                 switch (matrix_data.get(entity.getID())[0]){
                     case 1:
                         new_entity = new Squid("squid.png",entity.getX(),entity.getY(),36f,30f,entity.speed);
                         new_entity.setID(entity.getID());
                         new_entity.setType(1);
+                        new_entity.setColumn(entity.getColumn());
+                        new_entity.setRow(entity.getRow());
                         System.out.println("A squid was added.");
                         aliens.add(new_entity);
                         aliens.remove(entity);
@@ -309,6 +321,8 @@ public class Game_Screen implements Screen{
                         new_entity = new Crab("crab.png",entity.getX(),entity.getY(),36f,30f,entity.speed);
                         new_entity.setID(entity.getID());
                         new_entity.setType(2);
+                        new_entity.setColumn(entity.getColumn());
+                        new_entity.setRow(entity.getRow());
                         System.out.println("A crab was added.");
                         aliens.add(new_entity);
                         aliens.remove(entity);
@@ -317,6 +331,8 @@ public class Game_Screen implements Screen{
                         new_entity = new Octopus("octopus.png",entity.getX(),entity.getY(),36f,30f,entity.speed);
                         new_entity.setID(entity.getID());
                         new_entity.setType(3);
+                        new_entity.setColumn(entity.getColumn());
+                        new_entity.setRow(entity.getRow());
                         System.out.println("An octopus was added.");
                         aliens.add(new_entity);
                         aliens.remove(entity);
@@ -326,15 +342,14 @@ public class Game_Screen implements Screen{
                     default:
                         break;
                 }
-                matrix_data.get(entity.getID())[0] =  entity.getType();
             }
-            */
             if(entity.getY() <= 30){
                 game_over = true;
             }
             
             entity.draw(spriteBatch);
             moveAlien(entity);
+            
             if(alien_shoot.nextInt(5000) == 2500){
                 entity.shoot();
                 matrix_data.get(entity.getID())[1] = 1;
@@ -380,6 +395,7 @@ public class Game_Screen implements Screen{
             if(player.getLife()<3){
                 player.lifeUp();
                 extra_data.set(7, player.getLife());
+                extra_data.set(2, extra_data.get(2)+1);
             }
             resetMatrix();
             initializeData();
@@ -394,7 +410,7 @@ public class Game_Screen implements Screen{
             + "3 0/3 0/3 0/3 0/3 0/3 0/3 0/3 0/3 0/3 0/"
             + "2 0/2 0/2 0/2 0/2 0/2 0/2 0/2 0/2 0/2 0/"
             + "1 0/1 0/1 0/1 0/1 0/1 0/1 0/1 0/1 0/1 0,"
-            + "20,550,0,"
+            + "20,550,1,"
             + "270,5,0,0,3,"
             + "1111111111111111111111111111111111111111111111111111111111111111111111"
             + "1111111111111111111111111111111111111111111111111111111111111111111111"
@@ -416,32 +432,6 @@ public class Game_Screen implements Screen{
         }
         for (Integer w = 0; w < walls_data.size(); w++) {
             matrix += walls_data.get(w);
-        }
-    }
-    
-    public Entity createAlien(Integer rows, Integer columns){
-        Integer xi = extra_data.get(0), yi = extra_data.get(1);
-        Float speed = 1 + extra_data.get(2)*(1f/4f);
-        Entity entity;
-        
-        switch(matrix_data.get(columns+(10*rows))[0]){
-            case 1:
-                entity = new Squid("squid.png",(xi+(36f*columns)),(yi-(30f*rows)),36f,30f,speed);
-                entity.setID(columns+(10*rows));
-                System.out.println("A squid was added.");
-                return entity;
-            case 2:
-                entity = new Crab("crab.png",(xi+(36f*columns)),(yi-(30f*rows)),36f,30f,speed);
-                entity.setID(columns+(10*rows));
-                System.out.println("A crab was added.");
-                return entity;
-            case 3:
-                entity = new Octopus("octopus.png",(xi+(36f*columns)),(yi-(30f*rows)),36f,30f,speed);
-                entity.setID(columns+(10*rows));
-                System.out.println("An octopus was added.");
-                return entity;
-            default:
-                return null;
         }
     }
 
