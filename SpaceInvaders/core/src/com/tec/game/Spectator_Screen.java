@@ -173,6 +173,7 @@ public class Spectator_Screen implements Screen{
                             entity.setID((columns+10)*rows);
                             entity.setColumn(c);
                             entity.setRow(r);
+                            entity.setType(1);
                             System.out.println("A squid was added.");
                             aliens.add(entity);
                             break;
@@ -181,6 +182,7 @@ public class Spectator_Screen implements Screen{
                             entity.setID((columns+10)*rows);
                             entity.setColumn(c);
                             entity.setRow(r);
+                            entity.setType(2);
                             System.out.println("A crab was added.");
                             aliens.add(entity);
                             break;
@@ -189,6 +191,7 @@ public class Spectator_Screen implements Screen{
                             entity.setID((columns+10)*rows);
                             entity.setColumn(c);
                             entity.setRow(r);
+                            entity.setType(3);
                             System.out.println("An octopus was added.");
                             aliens.add(entity);
                             break;
@@ -317,18 +320,16 @@ public class Spectator_Screen implements Screen{
     public void drawAlienMatrix(SpriteBatch spriteBatch){
         Entity entity, new_entity;
         
-        for (int a = 0; a < aliens_data.size(); a++){
-            if(!checkIfExist(a, aliens) & aliens_data.get(a)[0] != 0 & aliens.size()<50){
-                System.out.println("The alien "+a+" does not exist");
-                createAlien(a);
-            }
-        }
-        
         for (Integer e = 0; e < aliens.size(); e++) {
             entity = aliens.get(e);
-            entity.setPosition(extra_data.get(0)+entity.getColumn()*entity.getWidth().intValue(), extra_data.get(1)-entity.getRow()*entity.getHeight().intValue());
-            if(!aliens_data.get(entity.getID())[0].equals(entity.getType())){
-                switch (aliens_data.get(entity.getID())[0]){
+            for (int a = 0; a < aliens_data.size(); a++){
+                if(!checkIfExist(a, aliens) & aliens_data.get(a)[0] != 0 & aliens.size()<50){
+                    System.out.println("The alien "+a+" does not exist");
+                    createAlien(a);
+                }
+            }
+            if(!entity.getType().equals(aliens_data.get(entity.getID())[0])){
+                switch(aliens_data.get(entity.getID())[0]){
                     case 1:
                         new_entity = new Squid("squid.png",entity.getX(),entity.getY(),36f,30f,entity.speed);
                         new_entity.setID(entity.getID());
@@ -365,13 +366,13 @@ public class Spectator_Screen implements Screen{
                         break;
                 }
             }
-            
+            entity.setPosition(extra_data.get(0)+entity.getColumn()*entity.getWidth().intValue(), extra_data.get(1)-entity.getRow()*entity.getHeight().intValue());
             entity.draw(spriteBatch);
-            
+
             if(aliens_data.get(e)[1] == 1){
                 entity.shoot();
             }
-            
+
             for (Integer b = 0; b < player.getBullets().size(); b++) {
                 if(entity.collision(player.getBullets().get(b))){
                     player.destroyBullet(player.getBullets().get(b));
@@ -382,7 +383,8 @@ public class Spectator_Screen implements Screen{
                     entity.destroyBullet(entity.getBullets().get(b));
                 }
             }
-        }
+        }   
+        
     }
     
     @Override

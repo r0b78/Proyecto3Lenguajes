@@ -299,14 +299,57 @@ public class Game_Screen implements Screen{
         return false;
     }
     
+    public void createAlien(Integer id){
+        Integer xi = extra_data.get(0), yi = extra_data.get(1), columns = 0, rows = 0;
+        Entity entity;
+        
+        for (Integer r = 0; r < 5; r++) {
+            for (Integer c = 0; c < 10 & (c+(10*r)) < matrix_data.size(); c++){
+                if(id.equals((10*r)+c)){
+                    switch(matrix_data.get(id)[0]){
+                        case 1:
+                            entity = new Squid("squid.png",(xi+(36f*c)),(yi-(30f*r)),36f,30f,0f);
+                            entity.setID((columns+10)*rows);
+                            entity.setColumn(c);
+                            entity.setRow(r);
+                            entity.setType(1);
+                            System.out.println("A squid was added.");
+                            aliens.add(entity);
+                            break;
+                        case 2:
+                            entity = new Crab("crab.png",(xi+(36f*c)),(yi-(30f*r)),36f,30f,0f);
+                            entity.setID((columns+10)*rows);
+                            entity.setColumn(c);
+                            entity.setRow(r);
+                            entity.setType(2);
+                            System.out.println("A crab was added.");
+                            aliens.add(entity);
+                            break;
+                        case 3:
+                            entity = new Octopus("octopus.png",(xi+(36f*c)),(yi-(30f*r)),36f,30f,0f);
+                            entity.setID((columns+10)*rows);
+                            entity.setColumn(c);
+                            entity.setRow(r);
+                            entity.setType(3);
+                            System.out.println("An octopus was added.");
+                            aliens.add(entity);
+                            break;
+                        default:
+                            break;
+                    }
+                }
+            }
+        }
+    }
+    
     public void drawAlienMatrix(SpriteBatch spriteBatch){
         Entity entity, new_entity;
         
         for (Integer e = 0; e < aliens.size(); e++) {
             entity = aliens.get(e);
-            entity.setPosition(extra_data.get(0)+entity.getColumn()*entity.getWidth().intValue(), extra_data.get(1)-entity.getRow()*entity.getHeight().intValue());
-            if(!matrix_data.get(entity.getID())[0].equals(entity.getType())){
-                switch (matrix_data.get(entity.getID())[0]){
+            
+            if(!entity.getType().equals(matrix_data.get(entity.getID())[0])){
+                switch(matrix_data.get(entity.getID())[0]){
                     case 1:
                         new_entity = new Squid("squid.png",entity.getX(),entity.getY(),36f,30f,entity.speed);
                         new_entity.setID(entity.getID());
@@ -343,6 +386,8 @@ public class Game_Screen implements Screen{
                         break;
                 }
             }
+            entity.setPosition(extra_data.get(0)+entity.getColumn()*entity.getWidth().intValue(), extra_data.get(1)-entity.getRow()*entity.getHeight().intValue());
+
             if(entity.getY() <= 30){
                 game_over = true;
             }
