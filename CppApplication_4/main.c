@@ -287,7 +287,7 @@ void *service_single_client(void *args) {
          int nue=split(s,'/',&nuevoS);
          
          
-         printf("Esto wey :%d \n",nue);
+         //printf("Esto wey :%d \n",nue);
                     
          ///////////////
          if(splitLen>0){
@@ -656,7 +656,7 @@ int parsearStringMatirz(struct Node** headd,struct Node** head2,char* string){
     char** tmp;
     int lenSplit=split(string,'/',&tmp);
     
-    printf("este es Len%d\n",lenSplit);
+    //printf("este es Len%d\n",lenSplit);
     int lenInterno;
     for(int i=0;i<lenSplit;i++){
       //  printf("Este es el array: %s\n",tmp[i]);
@@ -689,9 +689,9 @@ int matrizAString(struct Node* lista1,struct Node* lista2,char** stringSalida){
     
     memset(stringSalida,0,sizeof(stringSalida));
     
-    printf("\nlen Lista %d \n",getLargo(lista1));
+    //printf("\nlen Lista %d \n",getLargo(lista1));
     for (int i=0;i<getLargo(lista1);i++){
-         printf("LenListEssdfdfff: %dsdfsdfsdfsdf %d\n",i,get(i,lista1));
+        //printf("LenListEssdfdfff: %dsdfsdfsdfsdf %d\n",i,get(i,lista1));
         char buf[400];
         memset(buf,0,sizeof(buf));
         sprintf(buf,"%d",get(i,lista1));
@@ -761,7 +761,7 @@ int set(int n,struct Node** listaa,int newData){
     struct Node* tmp=*listaa;
     while (tmp!=NULL){
         if(cont==n){
-            printf("Esto");
+            //printf("Esto");
             (tmp)->data=newData;
            
         }
@@ -788,7 +788,7 @@ int generarJugadores(struct Node** listaa,struct Node** listaPoss,int n){
         numero=rand () % (N-M+1) + M;
         push(&lista,numero);
         push(&listaPos,0);
-        printf("sdfs\n");
+        //printf("sdfs\n");
     }
    // printList(lista);
     *listaa=lista;
